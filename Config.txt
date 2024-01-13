@@ -1,0 +1,3 @@
+C:\Users\marca\Videos\MJD
+C:\Users\marca\Documents\Java\Danse\Ressources\imports_danses
+C:\Users\marca\Documents\Java\Danse\Ressources\imports_danses\infos_danses.txt
