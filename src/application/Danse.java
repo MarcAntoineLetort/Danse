@@ -17,7 +17,7 @@ public class Danse {
 	ArrayList<String> artistes = new ArrayList<String>();
 	Image imageDanse1;
 	Image imageDanse2;
-	ArrayList<Genre> genres = new ArrayList<Genre>();;
+	ArrayList<Genre> genres = new ArrayList<Genre>();
 	int intensite = 1;
 	int technique = 1;
 	Version version;

@@ -35,6 +35,7 @@ public class Bouton extends Parent {
 	DropShadow effetText;
 	boolean etatValide;
 	Genre genre;
+	Tri typeTri;
 	Bouton changerDanseBouton;
 	int emplacement;
 
@@ -167,11 +168,17 @@ public class Bouton extends Parent {
 					for (Bouton boutonFiltres : VariableUtile.boutonsFiltres) {
 						boutonFiltres.actualiserCouleur();
 					}
-					for (Bouton boutonsFiltreAnnexes : VariableUtile.boutonsFiltresAnnexes) {
-						boutonsFiltreAnnexes.actualiserCouleur();
+					for (Bouton boutonFiltreAnnexe : VariableUtile.boutonsFiltresAnnexes) {
+						boutonFiltreAnnexe.actualiserCouleur();
 					}
 					for (Text textsFiltre : VariableUtile.textesFiltres) {
 						textsFiltre.setFill(VariableUtile.couleur1);
+					}
+					for (Bouton boutonTri : VariableUtile.boutonsTri) {
+						boutonTri.actualiserCouleur();
+					}
+					for (Bouton boutonTriAnnexe : VariableUtile.boutonsTriAnnexes) {
+						boutonTriAnnexe.actualiserCouleur();
 					}
 					for (Bouton boutonSelection : VariableUtile.boutonsSelection) {
 						boutonSelection.actualiserCouleur();
@@ -490,6 +497,32 @@ public class Bouton extends Parent {
 			}
 		});
 		VariableUtile.boutonsFiltres.add(this);
-		// VariableUtile.root.getChildren().add(this);
+	}
+	public void finirGenerationBoutonTri(String titreDifferent, Tri typeTri) {
+		if (titreDifferent != null) {
+			text.setText(titreDifferent);
+		}
+		if (typeTri != null) {
+			this.typeTri = typeTri;
+		}
+		this.setVisible(false);
+		this.toFront();
+		cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				if (typeTri != null) {
+					for (Bouton boutonFiltre : VariableUtile.boutonsTri) {
+						if (boutonFiltre.typeTri != null ) {
+							if (boutonFiltre != Bouton.this) {
+								boutonFiltre.invaliderBouton();
+							} else {
+								boutonFiltre.validerBouton();
+							}
+						}
+					}
+				}
+			}
+		});
+		VariableUtile.boutonsTri.add(this);
+		validerBouton(); //Pour finir l'initilisation
 	}
 }

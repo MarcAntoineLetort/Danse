@@ -43,6 +43,8 @@ public class VariableUtile {
 	public static ArrayList<Bouton> boutonsFiltres = new ArrayList<>();
 	public static ArrayList<Bouton> boutonsFiltresAnnexes = new ArrayList<>();
 	public static ArrayList<Bouton> boutonsSelection = new ArrayList<>();
+	public static ArrayList<Bouton> boutonsTri = new ArrayList<>();
+	public static ArrayList<Bouton> boutonsTriAnnexes = new ArrayList<>();
 	public static ArrayList<Text> textesFiltres = new ArrayList<>();
 	public static ArrayList<Text> textes = new ArrayList<>();
 	public static MediaPlayer playerVideo;
@@ -64,6 +66,7 @@ public class VariableUtile {
 	public static Bouton boutonPasser;
 	public static Bouton boutonSuggestion;
 	public static Bouton boutonFiltrer;
+	public static Bouton boutonTrier;
 	public static Bouton boutonIllimite;
 	public static Bouton boutonMelange;
 	public static Bouton boutonSelection;
@@ -90,11 +93,18 @@ public class VariableUtile {
 	public static Bouton boutonFiltreJazzy;
 	public static Bouton boutonFiltreValider;
 	public static Bouton boutonFiltreReinitialiser;
+	public static Bouton boutonTriAleatoire;
+	public static Bouton boutonTriAlphabetique;
+	public static Bouton boutonTriArtiste;
+	public static Bouton boutonTriVersion;
+	public static Bouton boutonTriOrdre;
+	public static Bouton boutonTriValider;
 	public static boolean videoEnCours = false;
 	public static boolean modeIllimite = false;
 	public static boolean modeMelange = false;
 	public static boolean modeSelection = false;
 	public static boolean modeFiltre = false;
+	public static boolean modeTri = false;
 	public static int numeroProchaineDanseSelection = 0;
 	public static ImageView imageViewDanseEchangeSelection;
 	public static Bouton boutonGlissePourEchangeSelection;
@@ -403,6 +413,15 @@ public class VariableUtile {
 			texteFiltre.setVisible(false);
 		}
 	}
+	
+	public static void cacherMenuTri() {
+		for (Bouton boutonTri : VariableUtile.boutonsTri) {
+			boutonTri.setVisible(false);
+		}
+		for (Bouton boutonTriAnnexe : VariableUtile.boutonsTriAnnexes) {
+			boutonTriAnnexe.setVisible(false);
+		}
+	}
 
 	public static void cacherEcranSelection() {
 		for (Bouton boutonSelection : VariableUtile.boutonsSelection) {
@@ -442,6 +461,16 @@ public class VariableUtile {
 		}
 		for (Text texteFiltre : VariableUtile.textesFiltres) {
 			texteFiltre.setVisible(true);
+		}
+		VariableUtile.barreRecherche.setVisible(true);
+	}
+	public static void afficherMenuTri() {
+		VariableUtile.modeTri = true;
+		for (Bouton boutonTri : VariableUtile.boutonsTri) {
+			boutonTri.setVisible(true);
+		}
+		for (Bouton boutonTriAnnexe : VariableUtile.boutonsTriAnnexes) {
+			boutonTriAnnexe.setVisible(true);
 		}
 		VariableUtile.barreRecherche.setVisible(true);
 	}

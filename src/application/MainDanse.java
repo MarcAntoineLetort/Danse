@@ -7,6 +7,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -332,8 +334,61 @@ public class MainDanse extends Application {
 		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
 		// Fin filtres
 
+		// Tri
+		VariableUtile.boutonTrier = new Bouton(VariableUtile.px * 10, VariableUtile.py * 2, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Trier");
+		VariableUtile.boutonTrier.setVisible(true);
+		VariableUtile.boutonTrier.toFront();
+		VariableUtile.boutonTrier.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.cacherMenuPrincipal();
+				VariableUtile.cacherEcranSelection();
+				VariableUtile.afficherMenuTri();
+			}
+		});
+		// TODO agencer et agrandir boutons tri
+		VariableUtile.boutonTriValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
+		VariableUtile.boutonTriValider.text.setText("Valider");
+		VariableUtile.boutonTriValider.setVisible(false);
+		VariableUtile.boutonTriValider.toFront();
+		VariableUtile.boutonTriValider.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.modeTri = false;
+				validerTri();
+			}
+		});
+
+		VariableUtile.boutonTriAleatoire = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Aleatoire");
+		VariableUtile.boutonTriAleatoire.etatValide = true;
+		VariableUtile.boutonTriAleatoire.finirGenerationBoutonTri("Aléatoire", Tri.Aleatoire);
+
+		VariableUtile.boutonTriAlphabetique = new Bouton(VariableUtile.px * 25, VariableUtile.py * 37,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Alphabetique");
+		VariableUtile.boutonTriAlphabetique.finirGenerationBoutonTri("Alphabétique", Tri.Alphabetique);
+
+		VariableUtile.boutonTriArtiste = new Bouton(VariableUtile.px * 25, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Artiste");
+		VariableUtile.boutonTriArtiste.finirGenerationBoutonTri(null, Tri.ParArtiste);
+
+		VariableUtile.boutonTriVersion = new Bouton(VariableUtile.px * 36, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Version");
+		VariableUtile.boutonTriVersion.finirGenerationBoutonTri(null, Tri.ParVersion);
+
+		VariableUtile.boutonTriOrdre = new Bouton(VariableUtile.px * 36, VariableUtile.py * 37, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Ordre");
+		VariableUtile.boutonTriOrdre.finirGenerationBoutonTri("Ajout", Tri.OrdreCreation);
+
+		for (Bouton bouton : VariableUtile.boutonsTri) {
+			if (bouton.typeTri != Tri.Aleatoire) {
+				bouton.invaliderBouton();
+			}
+		}
+		// Fin tri
+
 		// Illimité
-		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 10, VariableUtile.py * 2, VariableUtile.px * 6.8,
+		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Illimite");
 		VariableUtile.boutonIllimite.text.setText("Illimité");
 		VariableUtile.boutonIllimite.setVisible(true);
@@ -345,7 +400,7 @@ public class MainDanse extends Application {
 			}
 		});
 		// Mélange
-		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
+		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Mélange");
 		VariableUtile.boutonMelange.setVisible(true);
 		VariableUtile.boutonMelange.toFront();
@@ -355,7 +410,7 @@ public class MainDanse extends Application {
 			}
 		});
 		// Sélection
-		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
+		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Selection");
 		VariableUtile.boutonSelection.text.setText("Sélection");
 		VariableUtile.boutonSelection.setVisible(true);
@@ -401,19 +456,19 @@ public class MainDanse extends Application {
 			}
 		});
 
-		VariableUtile.genererBoutonSuggestion(false);
-
-		VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+		// VariableUtile.genererBoutonSuggestion(false);
 
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuggestion);
 		VariableUtile.boutonsMenu.add(boutonSuivant);
 		VariableUtile.boutonsMenu.add(boutonPrecedant);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonFiltrer);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonTrier);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonIllimite);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonMelange);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonSelection);
 		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreValider);
 		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreReinitialiser);
+		VariableUtile.boutonsTriAnnexes.add(VariableUtile.boutonTriValider);
 		VariableUtile.boutonsSelection.add(VariableUtile.boutonLancerSelection);
 		VariableUtile.boutonsSelection.add(VariableUtile.boutonReinitialiserSelection);
 		VariableUtile.boutonsSelection.add(VariableUtile.boutonAnnulerSelection);
@@ -472,10 +527,61 @@ public class MainDanse extends Application {
 			}
 		});
 
+		validerFiltre();
+
+		VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+
 		VariableUtile.textCompteur.toFront();
 
 		VariableUtile.primaryStage.setScene(VariableUtile.scene);
 		VariableUtile.primaryStage.show();
+	}
+
+	public static void trierDanse(Tri modeDeTri) {
+
+		switch (modeDeTri) {
+		case Aleatoire:
+			Collections.shuffle(VariableUtile.dansesFiltrees);
+			break;
+		case Alphabetique:
+			VariableUtile.dansesFiltrees.sort(Comparator.comparing(danse -> danse.titreMusique));
+			break;
+		case ParArtiste:
+			VariableUtile.dansesFiltrees.sort(
+				    Comparator.comparing(
+				        danse -> danse.artistes.isEmpty() ? "" : danse.artistes.get(0),
+				        Comparator.nullsLast(Comparator.naturalOrder())
+				    )
+				);
+			break;
+		case ParVersion:
+			VariableUtile.dansesFiltrees.sort(
+				    Comparator.comparing(
+				        danse -> danse.version,
+				        Comparator.nullsLast(Comparator.naturalOrder())
+				    )
+				);
+			break;
+		case OrdreCreation:
+			VariableUtile.dansesFiltrees.sort(Comparator.comparingInt(danse -> danse.ordre));
+			break;
+		default:
+			break;
+		}
+
+		if (!VariableUtile.modeFiltre && !VariableUtile.modeFiltre) {
+			VariableUtile.cacherMenuTri();
+			VariableUtile.cacherMenuFiltres();
+			if (!VariableUtile.modeSelection) {
+				VariableUtile.genererBoutonSuggestion(true);
+				VariableUtile.genererTextPage();
+				genererBoutonsDanse(true);
+
+				VariableUtile.afficherMenuPrincipal();
+			} else {
+				VariableUtile.reafficherEcranSelection();
+			}
+		}
 	}
 
 	private void completerDanses() {
@@ -623,6 +729,14 @@ public class MainDanse extends Application {
 		VariableUtile.textCompteur.setVisible(false);
 	}
 
+	public void validerTri() {
+		for (Bouton boutonFiltre : VariableUtile.boutonsTri) {
+			if (boutonFiltre.typeTri != null && boutonFiltre.etatValide) {
+				trierDanse(boutonFiltre.typeTri);
+			}
+		}
+	}
+
 	public void validerFiltre() {
 		VariableUtile.page = 0;
 		VariableUtile.dansesFiltrees.clear();
@@ -650,20 +764,21 @@ public class MainDanse extends Application {
 			}
 			VariableUtile.dansesFiltrees.retainAll(dansesRecherche);
 		}
-		if (!VariableUtile.modeFiltre) {
-			if (!VariableUtile.modeSelection) {
-				VariableUtile.genererBoutonSuggestion(true);
-				VariableUtile.genererTextPage();
-				genererBoutonsDanse(true);
 
-				VariableUtile.cacherMenuFiltres();
-				VariableUtile.afficherMenuPrincipal();
-			} else {
-				VariableUtile.cacherMenuFiltres();
-				VariableUtile.reafficherEcranSelection();
-			}
-		}
-
+//		if (!VariableUtile.modeFiltre) {
+//			if (!VariableUtile.modeSelection) {
+//				VariableUtile.genererBoutonSuggestion(true);
+//				VariableUtile.genererTextPage();
+//				genererBoutonsDanse(true);
+//
+//				VariableUtile.cacherMenuFiltres();
+//				VariableUtile.afficherMenuPrincipal();
+//			} else {
+//				VariableUtile.cacherMenuFiltres();
+//				VariableUtile.reafficherEcranSelection();
+//			}
+//		}
+		validerTri();
 	}
 
 	protected boolean aAuMoinsUnGenreActive(Danse danse) {
