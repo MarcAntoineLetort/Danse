@@ -11,7 +11,8 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 public class Danse {
-	int ordre = 0;
+	int ordreActuel = 0;
+	int ordreAjout = 0;
 	String nomVideo;
 	String titreMusique;
 	ArrayList<String> artistes = new ArrayList<String>();

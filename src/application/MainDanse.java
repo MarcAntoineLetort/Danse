@@ -359,25 +359,30 @@ public class MainDanse extends Application {
 			}
 		});
 
-		VariableUtile.boutonTriAleatoire = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Aleatoire");
+		int nbBouton = 5;
+		double margeX = VariableUtile.px*5;
+		double largeurX = VariableUtile.px * 9.8;
+		double positiondebutX = (VariableUtile.largeurFenetre - (nbBouton -1) * margeX - nbBouton * largeurX)/2;
+		
+		VariableUtile.boutonTriAleatoire = new Bouton(positiondebutX, VariableUtile.py * 17,
+				largeurX, VariableUtile.px * 10, 25, "Aleatoire");
 		VariableUtile.boutonTriAleatoire.etatValide = true;
 		VariableUtile.boutonTriAleatoire.finirGenerationBoutonTri("Aléatoire", Tri.Aleatoire);
 
-		VariableUtile.boutonTriAlphabetique = new Bouton(VariableUtile.px * 25, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Alphabetique");
+		VariableUtile.boutonTriAlphabetique = new Bouton(positiondebutX + 1*(largeurX + margeX), VariableUtile.py * 17,
+				largeurX, VariableUtile.px * 10, 25, "Alphabetique");
 		VariableUtile.boutonTriAlphabetique.finirGenerationBoutonTri("Alphabétique", Tri.Alphabetique);
 
-		VariableUtile.boutonTriArtiste = new Bouton(VariableUtile.px * 25, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Artiste");
+		VariableUtile.boutonTriArtiste = new Bouton(positiondebutX + 2*(largeurX + margeX), VariableUtile.py * 17,
+				largeurX, VariableUtile.px * 10, 25, "Artiste");
 		VariableUtile.boutonTriArtiste.finirGenerationBoutonTri(null, Tri.ParArtiste);
 
-		VariableUtile.boutonTriVersion = new Bouton(VariableUtile.px * 36, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Version");
+		VariableUtile.boutonTriVersion = new Bouton(positiondebutX + 3*(largeurX + margeX), VariableUtile.py * 17,
+				largeurX, VariableUtile.px * 10, 25, "Version");
 		VariableUtile.boutonTriVersion.finirGenerationBoutonTri(null, Tri.ParVersion);
 
-		VariableUtile.boutonTriOrdre = new Bouton(VariableUtile.px * 36, VariableUtile.py * 37, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Ordre");
+		VariableUtile.boutonTriOrdre = new Bouton(positiondebutX + 4*(largeurX + margeX), VariableUtile.py * 17, largeurX,
+				VariableUtile.px * 10, 25, "Ordre");
 		VariableUtile.boutonTriOrdre.finirGenerationBoutonTri("Ajout", Tri.OrdreCreation);
 
 		for (Bouton bouton : VariableUtile.boutonsTri) {
@@ -563,10 +568,15 @@ public class MainDanse extends Application {
 				);
 			break;
 		case OrdreCreation:
-			VariableUtile.dansesFiltrees.sort(Comparator.comparingInt(danse -> danse.ordre));
+			VariableUtile.dansesFiltrees.sort(Comparator.comparingInt(danse -> danse.ordreAjout));
 			break;
 		default:
 			break;
+		}
+		int ordreActuel = 1;
+		for (Danse danse : VariableUtile.dansesFiltrees) {
+			danse.ordreActuel = ordreActuel;
+			ordreActuel++;
 		}
 
 		if (!VariableUtile.modeFiltre && !VariableUtile.modeFiltre) {
@@ -586,7 +596,7 @@ public class MainDanse extends Application {
 
 	private void completerDanses() {
 		Scanner scanner = null;
-		int ordre = 1;
+		int ordreAjout = 1;
 		try {
 			scanner = new Scanner(VariableUtile.fichierInfosDanses);
 			while (scanner.hasNextLine()) {
@@ -596,7 +606,7 @@ public class MainDanse extends Application {
 				if (VariableUtile.danses.containsKey(titreMusique)) {
 					Danse danseACompleter = VariableUtile.danses.get(titreMusique);
 					String listeIdArtistes[] = infosStr[1].split("-");
-					danseACompleter.ordre = ordre;
+					danseACompleter.ordreAjout = ordreAjout;
 					for (int i = 0; i < listeIdArtistes.length; i++) {
 						String artiste = VariableUtile.artistes.get(Integer.valueOf(listeIdArtistes[i]));
 						danseACompleter.artistes.add(artiste);
@@ -617,12 +627,18 @@ public class MainDanse extends Application {
 						danseACompleter.genres.add(Genre.valueOf(listeGenreStr[i]));
 					}
 				}
-				ordre++;
+				ordreAjout++;
+			}
+			for (Danse danse : VariableUtile.danses.values()) {
+				if(danse.ordreAjout == 0){
+					danse.ordreAjout = ordreAjout;
+					ordreAjout++;
+				}
 			}
 		} catch (FileNotFoundException e) {
 			afficherErreur("Impossible d'ouvrir le fichier " + VariableUtile.fichierInfosDanses + " " + e);
 		} catch (Exception e) {
-			afficherErreur("Erreur pendant la récupération des infos danse ligne " + ordre + " " + e);
+			afficherErreur("Erreur pendant la récupération des infos danse ligne " + ordreAjout + " " + e);
 			e.printStackTrace();
 		} finally {
 			scanner.close();
@@ -658,6 +674,9 @@ public class MainDanse extends Application {
 							nomCompletDanse.lastIndexOf("."));
 					if (!versionString.contains(" ")) {
 						version = Version.valueOf(versionString);
+					}else{
+						// Nom non conforme
+						titreMusique = nomCompletDanse;
 					}
 				} else {
 					// Nom non conforme
@@ -749,7 +768,6 @@ public class MainDanse extends Application {
 					&& (VariableUtile.boutonFiltreTechniqueIntense.etatValide || danse.technique != 3)
 					&& (aAuMoinsUnGenreActive(danse))) {
 				VariableUtile.dansesFiltrees.add(danse);
-				danse.ordre = VariableUtile.dansesFiltrees.size();
 			}
 		}
 		// Barre de recherche

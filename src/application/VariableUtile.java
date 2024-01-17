@@ -119,7 +119,7 @@ public class VariableUtile {
 
 	public static void genererTextPage() {
 		if (textPage != null && danseSelectionnee != null) {
-			textPage.setText("Danse " + danseSelectionnee.ordre + "/" + dansesFiltrees.size() + " - Page " + (page + 1)
+			textPage.setText("Danse " + danseSelectionnee.ordreActuel + "/" + dansesFiltrees.size() + " - Page " + (page + 1)
 					+ "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
 			textPage.setFill(couleur1.brighter().brighter().brighter().brighter());
 			effetTextPage.setColor(VariableUtile.couleur1.invert());
