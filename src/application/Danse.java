@@ -33,7 +33,7 @@ public class Danse {
 			this.nomVideo = titreMusique + " - " + version.toString() + ".mp4";
 			this.version = version;
 
-			importerImages(titreMusique);
+			importerImages();
 		} else {
 			// Nom non conforme
 			this.nomVideo = titreMusique;
@@ -43,7 +43,7 @@ public class Danse {
 		VariableUtile.danses.put(titreMusique, this);
 	}
 
-	private void importerImages(String titreMusique2) {
+	private void importerImages() {
 		URL imageURL1 = null;
 		URL imageURL2 = null;
 		File dossierImagesDanses = new File("C:\\Users\\marca\\Documents\\Java\\Danse\\Ressources\\images danses");

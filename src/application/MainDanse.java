@@ -82,8 +82,6 @@ public class MainDanse extends Application {
 		completerDanses();
 
 		// TODO précharger les vidéos entièrement avant de les lancer
-		// TODO afficher les vidéos dans un ordre aléatoire sur la page
-		// principale + ajouter un onglet tri
 		// TODO ajouter un bouton de pause
 		// TODO ajouter le filtre nombre de danseurs + version jd
 
@@ -346,7 +344,6 @@ public class MainDanse extends Application {
 				VariableUtile.afficherMenuTri();
 			}
 		});
-		// TODO agencer et agrandir boutons tri
 		VariableUtile.boutonTriValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
 		VariableUtile.boutonTriValider.text.setText("Valider");
@@ -360,29 +357,29 @@ public class MainDanse extends Application {
 		});
 
 		int nbBouton = 5;
-		double margeX = VariableUtile.px*5;
+		double margeX = VariableUtile.px * 5;
 		double largeurX = VariableUtile.px * 9.8;
-		double positiondebutX = (VariableUtile.largeurFenetre - (nbBouton -1) * margeX - nbBouton * largeurX)/2;
-		
-		VariableUtile.boutonTriAleatoire = new Bouton(positiondebutX, VariableUtile.py * 17,
-				largeurX, VariableUtile.px * 10, 25, "Aleatoire");
+		double positiondebutX = (VariableUtile.largeurFenetre - (nbBouton - 1) * margeX - nbBouton * largeurX) / 2;
+
+		VariableUtile.boutonTriAleatoire = new Bouton(positiondebutX, VariableUtile.py * 17, largeurX,
+				VariableUtile.px * 10, 25, "Aleatoire");
 		VariableUtile.boutonTriAleatoire.etatValide = true;
 		VariableUtile.boutonTriAleatoire.finirGenerationBoutonTri("Aléatoire", Tri.Aleatoire);
 
-		VariableUtile.boutonTriAlphabetique = new Bouton(positiondebutX + 1*(largeurX + margeX), VariableUtile.py * 17,
-				largeurX, VariableUtile.px * 10, 25, "Alphabetique");
+		VariableUtile.boutonTriAlphabetique = new Bouton(positiondebutX + 1 * (largeurX + margeX),
+				VariableUtile.py * 17, largeurX, VariableUtile.px * 10, 25, "Alphabetique");
 		VariableUtile.boutonTriAlphabetique.finirGenerationBoutonTri("Alphabétique", Tri.Alphabetique);
 
-		VariableUtile.boutonTriArtiste = new Bouton(positiondebutX + 2*(largeurX + margeX), VariableUtile.py * 17,
+		VariableUtile.boutonTriArtiste = new Bouton(positiondebutX + 2 * (largeurX + margeX), VariableUtile.py * 17,
 				largeurX, VariableUtile.px * 10, 25, "Artiste");
 		VariableUtile.boutonTriArtiste.finirGenerationBoutonTri(null, Tri.ParArtiste);
 
-		VariableUtile.boutonTriVersion = new Bouton(positiondebutX + 3*(largeurX + margeX), VariableUtile.py * 17,
+		VariableUtile.boutonTriVersion = new Bouton(positiondebutX + 3 * (largeurX + margeX), VariableUtile.py * 17,
 				largeurX, VariableUtile.px * 10, 25, "Version");
 		VariableUtile.boutonTriVersion.finirGenerationBoutonTri(null, Tri.ParVersion);
 
-		VariableUtile.boutonTriOrdre = new Bouton(positiondebutX + 4*(largeurX + margeX), VariableUtile.py * 17, largeurX,
-				VariableUtile.px * 10, 25, "Ordre");
+		VariableUtile.boutonTriOrdre = new Bouton(positiondebutX + 4 * (largeurX + margeX), VariableUtile.py * 17,
+				largeurX, VariableUtile.px * 10, 25, "Ordre");
 		VariableUtile.boutonTriOrdre.finirGenerationBoutonTri("Ajout", Tri.OrdreCreation);
 
 		for (Bouton bouton : VariableUtile.boutonsTri) {
@@ -513,9 +510,20 @@ public class MainDanse extends Application {
 
 		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent ke) {
-				if (VariableUtile.videoEnCours && ke.equals(KeyCode.ESCAPE)) {
-					VariableUtile.scene.setCursor(Cursor.DEFAULT);
-					VariableUtile.videoEnCours = false;
+				if (VariableUtile.videoEnCours) {
+					if (ke.getCode().equals(KeyCode.ESCAPE)) {
+						VariableUtile.scene.setCursor(Cursor.DEFAULT);
+						VariableUtile.videoEnCours = false;
+					} else if (ke.getCode().equals(KeyCode.SPACE)) {
+						if (VariableUtile.playerVideo != null) {
+							if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PAUSED) {
+								VariableUtile.rembobinerVideo(3);
+								VariableUtile.playerVideo.play();
+							} else if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PLAYING) {
+								VariableUtile.playerVideo.pause();
+							}
+						}
+					}
 				} else {
 					// Barre de recherche
 					if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey() || ke.getCode().equals(KeyCode.SPACE)) {
@@ -552,20 +560,13 @@ public class MainDanse extends Application {
 			VariableUtile.dansesFiltrees.sort(Comparator.comparing(danse -> danse.titreMusique));
 			break;
 		case ParArtiste:
-			VariableUtile.dansesFiltrees.sort(
-				    Comparator.comparing(
-				        danse -> danse.artistes.isEmpty() ? "" : danse.artistes.get(0),
-				        Comparator.nullsLast(Comparator.naturalOrder())
-				    )
-				);
+			VariableUtile.dansesFiltrees
+					.sort(Comparator.comparing(danse -> danse.artistes.isEmpty() ? "" : danse.artistes.get(0),
+							Comparator.nullsLast(Comparator.naturalOrder())));
 			break;
 		case ParVersion:
 			VariableUtile.dansesFiltrees.sort(
-				    Comparator.comparing(
-				        danse -> danse.version,
-				        Comparator.nullsLast(Comparator.naturalOrder())
-				    )
-				);
+					Comparator.comparing(danse -> danse.version, Comparator.nullsLast(Comparator.naturalOrder())));
 			break;
 		case OrdreCreation:
 			VariableUtile.dansesFiltrees.sort(Comparator.comparingInt(danse -> danse.ordreAjout));
@@ -598,7 +599,7 @@ public class MainDanse extends Application {
 		Scanner scanner = null;
 		int ordreAjout = 1;
 		try {
-			scanner = new Scanner(VariableUtile.fichierInfosDanses);
+			scanner = new Scanner(VariableUtile.fichierInfosDanses, "UTF-8");
 			while (scanner.hasNextLine()) {
 				String[] infosStr = scanner.nextLine().split("\\|");
 				String titreMusique = infosStr[0];
@@ -630,7 +631,7 @@ public class MainDanse extends Application {
 				ordreAjout++;
 			}
 			for (Danse danse : VariableUtile.danses.values()) {
-				if(danse.ordreAjout == 0){
+				if (danse.ordreAjout == 0) {
 					danse.ordreAjout = ordreAjout;
 					ordreAjout++;
 				}
@@ -674,7 +675,7 @@ public class MainDanse extends Application {
 							nomCompletDanse.lastIndexOf("."));
 					if (!versionString.contains(" ")) {
 						version = Version.valueOf(versionString);
-					}else{
+					} else {
 						// Nom non conforme
 						titreMusique = nomCompletDanse;
 					}
@@ -783,19 +784,19 @@ public class MainDanse extends Application {
 			VariableUtile.dansesFiltrees.retainAll(dansesRecherche);
 		}
 
-//		if (!VariableUtile.modeFiltre) {
-//			if (!VariableUtile.modeSelection) {
-//				VariableUtile.genererBoutonSuggestion(true);
-//				VariableUtile.genererTextPage();
-//				genererBoutonsDanse(true);
-//
-//				VariableUtile.cacherMenuFiltres();
-//				VariableUtile.afficherMenuPrincipal();
-//			} else {
-//				VariableUtile.cacherMenuFiltres();
-//				VariableUtile.reafficherEcranSelection();
-//			}
-//		}
+		// if (!VariableUtile.modeFiltre) {
+		// if (!VariableUtile.modeSelection) {
+		// VariableUtile.genererBoutonSuggestion(true);
+		// VariableUtile.genererTextPage();
+		// genererBoutonsDanse(true);
+		//
+		// VariableUtile.cacherMenuFiltres();
+		// VariableUtile.afficherMenuPrincipal();
+		// } else {
+		// VariableUtile.cacherMenuFiltres();
+		// VariableUtile.reafficherEcranSelection();
+		// }
+		// }
 		validerTri();
 	}
 

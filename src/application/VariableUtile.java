@@ -160,30 +160,35 @@ public class VariableUtile {
 			VariableUtile.playerVideo.stop();
 			VariableUtile.playerVideo.dispose();
 		}
+		
 		// Démarrage de la vidéo
 		try {
 			VariableUtile.playerVideo = new MediaPlayer(new Media(
 					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
+			
+			VariableUtile.playerVideo.setOnReady(() -> {
+		        VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
+		        VariableUtile.root.getChildren().add(VariableUtile.mediaView);
+
+		        VariableUtile.playerVideo.setVolume(1);
+
+		        final DoubleProperty width = VariableUtile.mediaView.fitWidthProperty();
+		        final DoubleProperty height = VariableUtile.mediaView.fitHeightProperty();
+
+		        width.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "width"));
+		        height.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "height"));
+
+		        VariableUtile.primaryStage.setFullScreen(true);
+
+		        Platform.runLater(() -> {
+		            VariableUtile.playerVideo.play();
+		        });
+		    });
+			
 		} catch (Exception e) {
 			MainDanse.afficherErreur(
 					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
 		}
-		VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
-		VariableUtile.root.getChildren().add(VariableUtile.mediaView);
-
-		VariableUtile.playerVideo.setVolume(1);
-
-		final DoubleProperty width = VariableUtile.mediaView.fitWidthProperty();
-		final DoubleProperty height = VariableUtile.mediaView.fitHeightProperty();
-
-		width.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "width"));
-		height.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "height"));
-
-		VariableUtile.primaryStage.setFullScreen(true);
-
-		Platform.runLater(() -> {
-			VariableUtile.playerVideo.play();
-		});
 
 		cacherMenuPrincipal();
 		afficherBarreAction();
@@ -331,6 +336,17 @@ public class VariableUtile {
 				}
 			}
 		}, 35000 * (morceauJoue - 1));
+	}
+	
+	public static void rembobinerVideo(int nbSecondes){
+		Duration currentTime = VariableUtile.playerVideo.getCurrentTime();
+        Duration newTime = currentTime.subtract(Duration.seconds(nbSecondes));
+
+        if (newTime.lessThan(Duration.ZERO)) {
+            newTime = Duration.ZERO;
+        }
+
+        VariableUtile.playerVideo.seek(newTime);
 	}
 
 	public static void stoperMelange() {
