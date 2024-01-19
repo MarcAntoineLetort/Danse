@@ -190,7 +190,7 @@ public class MainDanse extends Application {
 			}
 		});
 		Bouton boutonPrecedant = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Précédant");
+				VariableUtile.px * 7, 25, "Précédent");
 
 		boutonPrecedant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
