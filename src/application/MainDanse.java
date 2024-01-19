@@ -81,8 +81,6 @@ public class MainDanse extends Application {
 
 		completerDanses();
 
-		// TODO précharger les vidéos entièrement avant de les lancer
-		// TODO ajouter un bouton de pause
 		// TODO ajouter le filtre nombre de danseurs + version jd
 
 		// TODO A retelecharger : love is all
