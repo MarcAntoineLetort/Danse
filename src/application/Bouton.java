@@ -488,10 +488,16 @@ public class Bouton extends Parent {
 				boolean comportementClassique = true;
 				if (genre != null) {
 					boolean tousLesGenresActives = true;
+					boolean tousLesAutresGenresDesactives = true;
 					for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
-						if (boutonFiltre.genre != null && !boutonFiltre.etatValide) {
-							tousLesGenresActives = false;
-							break;
+						if (boutonFiltre.genre != null) {
+							if (boutonFiltre.etatValide) {
+								if (boutonFiltre != Bouton.this) {
+									tousLesAutresGenresDesactives = false;
+								}
+							} else {
+								tousLesGenresActives = false;
+							}
 						}
 					}
 					if (tousLesGenresActives) {
@@ -501,13 +507,26 @@ public class Bouton extends Parent {
 								boutonFiltre.invaliderBouton();
 							}
 						}
+					} else if (tousLesAutresGenresDesactives) {
+						comportementClassique = false;
+						for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+							if (boutonFiltre.genre != null) {
+								boutonFiltre.validerBouton();
+							}
+						}
 					}
 				} else if (nbDanseurs != 0) {
 					boolean tousLesNbActives = true;
+					boolean tousLesAutresNbDesactives = true;
 					for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
-						if (boutonFiltre.nbDanseurs != 0 && !boutonFiltre.etatValide) {
-							tousLesNbActives = false;
-							break;
+						if (boutonFiltre.nbDanseurs != 0) {
+							if (boutonFiltre.etatValide) {
+								if (boutonFiltre != Bouton.this) {
+									tousLesAutresNbDesactives = false;
+								}
+							} else {
+								tousLesNbActives = false;
+							}
 						}
 					}
 					if (tousLesNbActives) {
@@ -515,6 +534,13 @@ public class Bouton extends Parent {
 						for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
 							if (boutonFiltre.nbDanseurs != 0 && boutonFiltre.nbDanseurs != nbDanseurs) {
 								boutonFiltre.invaliderBouton();
+							}
+						}
+					} else if (tousLesAutresNbDesactives) {
+						comportementClassique = false;
+						for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+							if (boutonFiltre.nbDanseurs != 0) {
+								boutonFiltre.validerBouton();
 							}
 						}
 					}
