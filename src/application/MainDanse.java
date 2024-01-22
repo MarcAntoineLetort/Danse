@@ -81,9 +81,8 @@ public class MainDanse extends Application {
 
 		completerDanses();
 
-		// TODO ajouter le filtre nombre de danseurs + version jd
+		// TODO ajouter le filtre version jd
 
-		// TODO A retelecharger : love is all
 		// TODO A mettre plus fort : hey girl
 
 		genererBoutonsFinDeDanse();
@@ -580,10 +579,10 @@ public class MainDanse extends Application {
 		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
 
 		// Filtres nombre de danseurs -- Opacité paint.net 160
-		VariableUtile.texteFiltreNbDanseurs = new Text(VariableUtile.px * 65, VariableUtile.py * 14,
+		VariableUtile.texteFiltreNbDanseurs = new Text(VariableUtile.px * 61, VariableUtile.py * 14,
 				"Nombre de danseurs");
 		VariableUtile.texteFiltreNbDanseurs.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.texteFiltreNbDanseurs.setWrappingWidth(VariableUtile.px * 30);
+		VariableUtile.texteFiltreNbDanseurs.setWrappingWidth(VariableUtile.px * 32);
 		VariableUtile.texteFiltreNbDanseurs.setTextAlignment(TextAlignment.CENTER);
 		VariableUtile.texteFiltreNbDanseurs.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
 		VariableUtile.texteFiltreNbDanseurs.setEffect(VariableUtile.effetTextPage);
