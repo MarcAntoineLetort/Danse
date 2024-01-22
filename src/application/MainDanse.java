@@ -86,6 +86,153 @@ public class MainDanse extends Application {
 		// TODO A retelecharger : love is all
 		// TODO A mettre plus fort : hey girl
 
+		genererBoutonsFinDeDanse();
+
+		VariableUtile.dansesFiltrees.addAll(VariableUtile.danses.values());
+
+		genererBoutonsPagePrincipale();
+
+		genererBoutonsFiltre();
+
+		genererBoutonsTri();
+
+		genererBoutonIllimite();
+
+		genererBoutonMelange();
+
+		genererBoutonsSelection();
+
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuggestion);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuivant);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonPrecedent);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonFiltrer);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonTrier);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonIllimite);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonMelange);
+		VariableUtile.boutonsMenu.add(VariableUtile.boutonSelection);
+		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreValider);
+		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreReinitialiser);
+		VariableUtile.boutonsTriAnnexes.add(VariableUtile.boutonTriValider);
+		VariableUtile.boutonsSelection.add(VariableUtile.boutonLancerSelection);
+		VariableUtile.boutonsSelection.add(VariableUtile.boutonReinitialiserSelection);
+		VariableUtile.boutonsSelection.add(VariableUtile.boutonAnnulerSelection);
+
+		for (Bouton bouton : VariableUtile.boutonsFiltres) {
+			bouton.validerBouton();
+		}
+		VariableUtile.boutonsAction.add(VariableUtile.boutonQuitter);
+		VariableUtile.boutonsAction.add(VariableUtile.boutonRejouer);
+		VariableUtile.boutonsAction.add(VariableUtile.boutonPasser);
+
+		VariableUtile.textPage = new Text(VariableUtile.px * 35, VariableUtile.hauteurFenetre * 0.18, "");
+		VariableUtile.textes.add(VariableUtile.textPage);
+		VariableUtile.textPage.setFont(new Font(VariableUtile.police, VariableUtile.py * 2));
+		VariableUtile.textPage.setWrappingWidth(VariableUtile.px * 17);
+		VariableUtile.textPage.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.textPage.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.effetTextPage = new DropShadow();
+		VariableUtile.effetTextPage.setColor(VariableUtile.couleur1.invert());
+		VariableUtile.effetTextPage.setRadius(50);
+		VariableUtile.effetTextPage.setSpread(0.8);
+		VariableUtile.textPage.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.root.getChildren().add(VariableUtile.textPage);
+
+		VariableUtile.textCompteur = new Text(VariableUtile.px * 0, VariableUtile.py * 65, "");
+		VariableUtile.textCompteur.setFont(new Font(VariableUtile.police, VariableUtile.py * 55));
+		VariableUtile.textCompteur.setWrappingWidth(VariableUtile.px * 100);
+		VariableUtile.textCompteur.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.textCompteur.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.textCompteur.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.textCompteur.setVisible(false);
+		VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
+
+		// Barre de recherche
+		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 50, VariableUtile.py * 2,
+				VariableUtile.px * 17, VariableUtile.py * 3.5, "LoupePetite");
+
+		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			public void handle(KeyEvent ke) {
+				if (VariableUtile.videoEnCours) {
+					if (ke.getCode().equals(KeyCode.ESCAPE)) {
+						VariableUtile.scene.setCursor(Cursor.DEFAULT);
+						VariableUtile.videoEnCours = false;
+						VariableUtile.boutonQuitter.toFront();
+						VariableUtile.boutonRejouer.toFront();
+						VariableUtile.boutonPasser.toFront();
+					} else if (ke.getCode().equals(KeyCode.SPACE)) {
+						if (VariableUtile.playerVideo != null) {
+							if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PAUSED) {
+								VariableUtile.rembobinerVideo(3);
+								VariableUtile.playerVideo.play();
+							} else if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PLAYING) {
+								VariableUtile.playerVideo.pause();
+							}
+						}
+					}
+				} else {
+					// Barre de recherche
+					if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey() || ke.getCode().equals(KeyCode.SPACE)) {
+						VariableUtile.barreRecherche.text
+								.setText(VariableUtile.barreRecherche.text.getText() + ke.getText());
+						validerFiltre();
+					} else if (ke.getCode().equals(KeyCode.BACK_SPACE)
+							&& VariableUtile.barreRecherche.text.getText().length() > 0) {
+						VariableUtile.barreRecherche.text.setText(VariableUtile.barreRecherche.text.getText()
+								.substring(0, VariableUtile.barreRecherche.text.getText().length() - 1));
+						validerFiltre();
+					}
+				}
+			}
+		});
+
+		validerFiltre();
+
+		if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
+			VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+		} else {
+			VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
+		}
+
+		VariableUtile.textCompteur.toFront();
+
+		VariableUtile.primaryStage.setScene(VariableUtile.scene);
+		VariableUtile.primaryStage.show();
+	}
+
+	private void genererBoutonsPagePrincipale() {
+
+		genererBoutonsDanse(false);
+
+		VariableUtile.boutonSuivant = new Bouton(VariableUtile.px * 75, VariableUtile.py * 45, VariableUtile.px * 7,
+				VariableUtile.px * 7, 25, "Suivant");
+
+		VariableUtile.boutonSuivant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				if (VariableUtile.page < (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6)) {
+					VariableUtile.page++;
+				} else {
+					VariableUtile.page = 0;
+				}
+
+				genererBoutonsDanse(true);
+			}
+		});
+		VariableUtile.boutonPrecedent = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
+				VariableUtile.px * 7, 25, "Précédent");
+
+		VariableUtile.boutonPrecedent.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				if (VariableUtile.page > 0) {
+					VariableUtile.page--;
+				} else {
+					VariableUtile.page = (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6);
+				}
+				genererBoutonsDanse(true);
+			}
+		});
+	}
+
+	private void genererBoutonsFinDeDanse() {
 		VariableUtile.boutonQuitter = new Bouton(VariableUtile.px * 93, VariableUtile.py * 45, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Quitter");
 		VariableUtile.boutonQuitter.setVisible(false);
@@ -168,169 +315,86 @@ public class MainDanse extends Application {
 				VariableUtile.lancerVideoAuHasard();
 			}
 		});
+	}
 
-		VariableUtile.dansesFiltrees.addAll(VariableUtile.danses.values());
-
-		genererBoutonsDanse(false);
-
-		Bouton boutonSuivant = new Bouton(VariableUtile.px * 75, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Suivant");
-
-		boutonSuivant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+	private void genererBoutonMelange() {
+		// Mélange
+		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Mélange");
+		VariableUtile.boutonMelange.setVisible(true);
+		VariableUtile.boutonMelange.toFront();
+		VariableUtile.boutonMelange.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				if (VariableUtile.page < (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6)) {
-					VariableUtile.page++;
-				} else {
-					VariableUtile.page = 0;
+				VariableUtile.lancerMelange();
+			}
+		});
+	}
+
+	private void genererBoutonIllimite() {
+		// Illimité
+		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Illimite");
+		VariableUtile.boutonIllimite.text.setText("Illimité");
+		VariableUtile.boutonIllimite.setVisible(true);
+		VariableUtile.boutonIllimite.toFront();
+		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.modeIllimite = true;
+				VariableUtile.lancerVideoAuHasard();
+			}
+		});
+	}
+
+	private void genererBoutonsSelection() {
+		// Sélection
+		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Selection");
+		VariableUtile.boutonSelection.text.setText("Sélection");
+		VariableUtile.boutonSelection.setVisible(true);
+		VariableUtile.boutonSelection.toFront();
+		VariableUtile.boutonSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.ouvrirEcranSelection();
+			}
+		});
+		VariableUtile.boutonLancerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 80,
+				VariableUtile.px * 8.8, VariableUtile.px * 8, 25, "Valider_filtre");
+		VariableUtile.boutonLancerSelection.text.setText("C'est parti !");
+		VariableUtile.boutonLancerSelection.setVisible(false);
+		VariableUtile.boutonLancerSelection.toFront();
+		VariableUtile.boutonLancerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.numeroProchaineDanseSelection = 0;
+				if (sauterDansesVides()) {
+					VariableUtile.lancerVideo(
+							VariableUtile.dansesSelectionnees.get(VariableUtile.numeroProchaineDanseSelection));
 				}
 
-				genererBoutonsDanse(true);
 			}
 		});
-		Bouton boutonPrecedant = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Précédent");
-
-		boutonPrecedant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+		VariableUtile.boutonReinitialiserSelection = new Bouton(VariableUtile.px * 77, VariableUtile.py * 2,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rejouer");
+		VariableUtile.boutonReinitialiserSelection.text.setText("Au hasard");
+		VariableUtile.boutonReinitialiserSelection.setVisible(false);
+		VariableUtile.boutonReinitialiserSelection.toFront();
+		VariableUtile.boutonReinitialiserSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				if (VariableUtile.page > 0) {
-					VariableUtile.page--;
-				} else {
-					VariableUtile.page = (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6);
-				}
-				genererBoutonsDanse(true);
+				VariableUtile.ouvrirEcranSelection();
 			}
 		});
-
-		// Filtres
-		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Filtrer");
-		VariableUtile.boutonFiltrer.setVisible(true);
-		VariableUtile.boutonFiltrer.toFront();
-		VariableUtile.boutonFiltrer.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+		VariableUtile.boutonAnnulerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 2,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Quitter");
+		VariableUtile.boutonAnnulerSelection.text.setText("Annuler");
+		VariableUtile.boutonAnnulerSelection.setVisible(false);
+		VariableUtile.boutonAnnulerSelection.toFront();
+		VariableUtile.boutonAnnulerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				VariableUtile.cacherMenuPrincipal();
-				VariableUtile.cacherEcranSelection();
-				VariableUtile.afficherMenuFiltres();
+				VariableUtile.finSelection();
 			}
 		});
+	}
 
-		VariableUtile.boutonFiltreValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
-		VariableUtile.boutonFiltreValider.text.setText("Valider");
-		VariableUtile.boutonFiltreValider.setVisible(false);
-		VariableUtile.boutonFiltreValider.toFront();
-		VariableUtile.boutonFiltreValider.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.modeFiltre = false;
-				validerFiltre();
-			}
-		});
-		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 81, VariableUtile.py * 85,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 20, "Rejouer");
-		VariableUtile.boutonFiltreReinitialiser.text.setText("Réinitialiser");
-		VariableUtile.boutonFiltreReinitialiser.setVisible(false);
-		VariableUtile.boutonFiltreReinitialiser.toFront();
-		VariableUtile.boutonFiltreReinitialiser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
-					boutonFiltre.validerBouton();
-				}
-			}
-		});
-
-		VariableUtile.textFiltreIntensite = new Text(VariableUtile.px * 1, VariableUtile.py * 14, "Intensité");
-		VariableUtile.textFiltreIntensite.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.textFiltreIntensite.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.textFiltreIntensite.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textFiltreIntensite.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textFiltreIntensite.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textFiltreIntensite.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.textFiltreIntensite);
-		VariableUtile.root.getChildren().add(VariableUtile.textFiltreIntensite);
-
-		VariableUtile.boutonFiltreIntensiteFaible = new Bouton(VariableUtile.px * 2, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_faible");
-		VariableUtile.boutonFiltreIntensiteFaible.finirGenerationBoutonFiltre("Faible", null);
-
-		VariableUtile.boutonFiltreIntensiteModeree = new Bouton(VariableUtile.px * 2, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_moderee");
-		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("Modérée", null);
-
-		VariableUtile.boutonFiltreIntensiteIntense = new Bouton(VariableUtile.px * 2, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_intense");
-		VariableUtile.boutonFiltreIntensiteIntense.finirGenerationBoutonFiltre("Intense", null);
-
-		VariableUtile.textFiltreTechnique = new Text(VariableUtile.px * 10, VariableUtile.py * 14, "Technique");
-		VariableUtile.textFiltreTechnique.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.textFiltreTechnique.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.textFiltreTechnique.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textFiltreTechnique.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textFiltreTechnique.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textFiltreTechnique.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.textFiltreTechnique);
-		VariableUtile.root.getChildren().add(VariableUtile.textFiltreTechnique);
-
-		VariableUtile.boutonFiltreTechniqueFaible = new Bouton(VariableUtile.px * 11, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_faible");
-		VariableUtile.boutonFiltreTechniqueFaible.finirGenerationBoutonFiltre("Faible", null);
-
-		VariableUtile.boutonFiltreTechniqueModeree = new Bouton(VariableUtile.px * 11, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_moderee");
-		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("Modérée", null);
-
-		VariableUtile.boutonFiltreTechniqueIntense = new Bouton(VariableUtile.px * 11, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_elevee");
-		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("Elevée", null);
-
-		// Filtres genre -- Opacité paint.net 150
-		VariableUtile.textFiltreGenre = new Text(VariableUtile.px * 35, VariableUtile.py * 14, "Genre");
-		VariableUtile.textFiltreGenre.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.textFiltreGenre.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.textFiltreGenre.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textFiltreGenre.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textFiltreGenre.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textFiltreGenre.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.textFiltreGenre);
-		VariableUtile.root.getChildren().add(VariableUtile.textFiltreGenre);
-
-		VariableUtile.boutonFiltreSportif = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Sportif");
-		VariableUtile.boutonFiltreSportif.finirGenerationBoutonFiltre(null, Genre.Sportif);
-
-		VariableUtile.boutonFiltreElectro = new Bouton(VariableUtile.px * 25, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Electro");
-		VariableUtile.boutonFiltreElectro.finirGenerationBoutonFiltre(null, Genre.Electro);
-
-		VariableUtile.boutonFiltreLatino = new Bouton(VariableUtile.px * 25, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Latino");
-		VariableUtile.boutonFiltreLatino.finirGenerationBoutonFiltre(null, Genre.Latino);
-
-		VariableUtile.boutonFiltreFolklore = new Bouton(VariableUtile.px * 36, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Folklore");
-		VariableUtile.boutonFiltreFolklore.finirGenerationBoutonFiltre("Folk", Genre.Folklore);
-
-		VariableUtile.boutonFiltreRandB = new Bouton(VariableUtile.px * 36, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "RandB");
-		VariableUtile.boutonFiltreRandB.finirGenerationBoutonFiltre("R&B", Genre.RandB);
-
-		VariableUtile.boutonFiltreRock = new Bouton(VariableUtile.px * 36, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rock");
-		VariableUtile.boutonFiltreRock.finirGenerationBoutonFiltre(null, Genre.Rock);
-
-		VariableUtile.boutonFiltreRetro = new Bouton(VariableUtile.px * 47, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Retro");
-		VariableUtile.boutonFiltreRetro.finirGenerationBoutonFiltre("Retro", Genre.Retro);
-
-		VariableUtile.boutonFiltrePop = new Bouton(VariableUtile.px * 47, VariableUtile.py * 37, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Pop");
-		VariableUtile.boutonFiltrePop.finirGenerationBoutonFiltre("Pop", Genre.Pop);
-
-		VariableUtile.boutonFiltreJazzy = new Bouton(VariableUtile.px * 47, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Jazzy");
-		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
-		// Fin filtres
-
-		// Tri
+	private void genererBoutonsTri() {
 		VariableUtile.boutonTrier = new Bouton(VariableUtile.px * 10, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Trier");
 		VariableUtile.boutonTrier.setVisible(true);
@@ -385,167 +449,163 @@ public class MainDanse extends Application {
 				bouton.invaliderBouton();
 			}
 		}
-		// Fin tri
+	}
 
-		// Illimité
-		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Illimite");
-		VariableUtile.boutonIllimite.text.setText("Illimité");
-		VariableUtile.boutonIllimite.setVisible(true);
-		VariableUtile.boutonIllimite.toFront();
-		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+	private void genererBoutonsFiltre() {
+		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 2, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Filtrer");
+		VariableUtile.boutonFiltrer.setVisible(true);
+		VariableUtile.boutonFiltrer.toFront();
+		VariableUtile.boutonFiltrer.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				VariableUtile.modeIllimite = true;
-				VariableUtile.lancerVideoAuHasard();
-			}
-		});
-		// Mélange
-		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Mélange");
-		VariableUtile.boutonMelange.setVisible(true);
-		VariableUtile.boutonMelange.toFront();
-		VariableUtile.boutonMelange.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.lancerMelange();
-			}
-		});
-		// Sélection
-		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Selection");
-		VariableUtile.boutonSelection.text.setText("Sélection");
-		VariableUtile.boutonSelection.setVisible(true);
-		VariableUtile.boutonSelection.toFront();
-		VariableUtile.boutonSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.ouvrirEcranSelection();
-			}
-		});
-		VariableUtile.boutonLancerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 80,
-				VariableUtile.px * 8.8, VariableUtile.px * 8, 25, "Valider_filtre");
-		VariableUtile.boutonLancerSelection.text.setText("C'est parti !");
-		VariableUtile.boutonLancerSelection.setVisible(false);
-		VariableUtile.boutonLancerSelection.toFront();
-		VariableUtile.boutonLancerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.numeroProchaineDanseSelection = 0;
-				if (sauterDansesVides()) {
-					VariableUtile.lancerVideo(
-							VariableUtile.dansesSelectionnees.get(VariableUtile.numeroProchaineDanseSelection));
-				}
-
-			}
-		});
-		VariableUtile.boutonReinitialiserSelection = new Bouton(VariableUtile.px * 77, VariableUtile.py * 2,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rejouer");
-		VariableUtile.boutonReinitialiserSelection.text.setText("Au hasard");
-		VariableUtile.boutonReinitialiserSelection.setVisible(false);
-		VariableUtile.boutonReinitialiserSelection.toFront();
-		VariableUtile.boutonReinitialiserSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.ouvrirEcranSelection();
-			}
-		});
-		VariableUtile.boutonAnnulerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 2,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Quitter");
-		VariableUtile.boutonAnnulerSelection.text.setText("Annuler");
-		VariableUtile.boutonAnnulerSelection.setVisible(false);
-		VariableUtile.boutonAnnulerSelection.toFront();
-		VariableUtile.boutonAnnulerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.finSelection();
+				VariableUtile.cacherMenuPrincipal();
+				VariableUtile.cacherEcranSelection();
+				VariableUtile.afficherMenuFiltres();
 			}
 		});
 
-		// VariableUtile.genererBoutonSuggestion(false);
-
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuggestion);
-		VariableUtile.boutonsMenu.add(boutonSuivant);
-		VariableUtile.boutonsMenu.add(boutonPrecedant);
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonFiltrer);
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonTrier);
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonIllimite);
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonMelange);
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonSelection);
-		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreValider);
-		VariableUtile.boutonsFiltresAnnexes.add(VariableUtile.boutonFiltreReinitialiser);
-		VariableUtile.boutonsTriAnnexes.add(VariableUtile.boutonTriValider);
-		VariableUtile.boutonsSelection.add(VariableUtile.boutonLancerSelection);
-		VariableUtile.boutonsSelection.add(VariableUtile.boutonReinitialiserSelection);
-		VariableUtile.boutonsSelection.add(VariableUtile.boutonAnnulerSelection);
-
-		for (Bouton bouton : VariableUtile.boutonsFiltres) {
-			bouton.validerBouton();
-		}
-		VariableUtile.boutonsAction.add(VariableUtile.boutonQuitter);
-		VariableUtile.boutonsAction.add(VariableUtile.boutonRejouer);
-		VariableUtile.boutonsAction.add(VariableUtile.boutonPasser);
-
-		VariableUtile.textPage = new Text(VariableUtile.px * 35, VariableUtile.hauteurFenetre * 0.18, "");
-		VariableUtile.textes.add(VariableUtile.textPage);
-		VariableUtile.textPage.setFont(new Font(VariableUtile.police, VariableUtile.py * 2));
-		VariableUtile.textPage.setWrappingWidth(VariableUtile.px * 17);
-		VariableUtile.textPage.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textPage.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.effetTextPage = new DropShadow();
-		VariableUtile.effetTextPage.setColor(VariableUtile.couleur1.invert());
-		VariableUtile.effetTextPage.setRadius(50);
-		VariableUtile.effetTextPage.setSpread(0.8);
-		VariableUtile.textPage.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.root.getChildren().add(VariableUtile.textPage);
-
-		VariableUtile.textCompteur = new Text(VariableUtile.px * 0, VariableUtile.py * 65, "");
-		VariableUtile.textCompteur.setFont(new Font(VariableUtile.police, VariableUtile.py * 55));
-		VariableUtile.textCompteur.setWrappingWidth(VariableUtile.px * 100);
-		VariableUtile.textCompteur.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textCompteur.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textCompteur.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textCompteur.setVisible(false);
-		VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
-
-		// Barre de recherche
-		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 50, VariableUtile.py * 2,
-				VariableUtile.px * 17, VariableUtile.py * 3.5, "LoupePetite");
-
-		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-			public void handle(KeyEvent ke) {
-				if (VariableUtile.videoEnCours) {
-					if (ke.getCode().equals(KeyCode.ESCAPE)) {
-						VariableUtile.scene.setCursor(Cursor.DEFAULT);
-						VariableUtile.videoEnCours = false;
-					} else if (ke.getCode().equals(KeyCode.SPACE)) {
-						if (VariableUtile.playerVideo != null) {
-							if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PAUSED) {
-								VariableUtile.rembobinerVideo(3);
-								VariableUtile.playerVideo.play();
-							} else if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PLAYING) {
-								VariableUtile.playerVideo.pause();
-							}
-						}
-					}
-				} else {
-					// Barre de recherche
-					if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey() || ke.getCode().equals(KeyCode.SPACE)) {
-						VariableUtile.barreRecherche.text
-								.setText(VariableUtile.barreRecherche.text.getText() + ke.getText());
-						validerFiltre();
-					} else if (ke.getCode().equals(KeyCode.BACK_SPACE)
-							&& VariableUtile.barreRecherche.text.getText().length() > 0) {
-						VariableUtile.barreRecherche.text.setText(VariableUtile.barreRecherche.text.getText()
-								.substring(0, VariableUtile.barreRecherche.text.getText().length() - 1));
-						validerFiltre();
-					}
+		VariableUtile.boutonFiltreValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
+		VariableUtile.boutonFiltreValider.text.setText("Valider");
+		VariableUtile.boutonFiltreValider.setVisible(false);
+		VariableUtile.boutonFiltreValider.toFront();
+		VariableUtile.boutonFiltreValider.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				VariableUtile.modeFiltre = false;
+				validerFiltre();
+			}
+		});
+		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 81, VariableUtile.py * 85,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 20, "Rejouer");
+		VariableUtile.boutonFiltreReinitialiser.text.setText("Réinitialiser");
+		VariableUtile.boutonFiltreReinitialiser.setVisible(false);
+		VariableUtile.boutonFiltreReinitialiser.toFront();
+		VariableUtile.boutonFiltreReinitialiser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent me) {
+				for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+					boutonFiltre.validerBouton();
 				}
 			}
 		});
 
-		validerFiltre();
+		VariableUtile.textFiltreIntensite = new Text(VariableUtile.px * 1, VariableUtile.py * 14, "Intensité");
+		VariableUtile.textFiltreIntensite.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
+		VariableUtile.textFiltreIntensite.setWrappingWidth(VariableUtile.px * 9);
+		VariableUtile.textFiltreIntensite.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.textFiltreIntensite.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.textFiltreIntensite.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.textFiltreIntensite.setVisible(false);
+		VariableUtile.textesFiltres.add(VariableUtile.textFiltreIntensite);
+		VariableUtile.root.getChildren().add(VariableUtile.textFiltreIntensite);
 
-		VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+		VariableUtile.boutonFiltreIntensiteFaible = new Bouton(VariableUtile.px * 2, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_faible");
+		VariableUtile.boutonFiltreIntensiteFaible.finirGenerationBoutonFiltre("Faible");
 
-		VariableUtile.textCompteur.toFront();
+		VariableUtile.boutonFiltreIntensiteModeree = new Bouton(VariableUtile.px * 2, VariableUtile.py * 37,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_moderee");
+		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("Modérée");
 
-		VariableUtile.primaryStage.setScene(VariableUtile.scene);
-		VariableUtile.primaryStage.show();
+		VariableUtile.boutonFiltreIntensiteIntense = new Bouton(VariableUtile.px * 2, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_intense");
+		VariableUtile.boutonFiltreIntensiteIntense.finirGenerationBoutonFiltre("Intense");
+
+		VariableUtile.textFiltreTechnique = new Text(VariableUtile.px * 10, VariableUtile.py * 14, "Technique");
+		VariableUtile.textFiltreTechnique.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
+		VariableUtile.textFiltreTechnique.setWrappingWidth(VariableUtile.px * 9);
+		VariableUtile.textFiltreTechnique.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.textFiltreTechnique.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.textFiltreTechnique.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.textFiltreTechnique.setVisible(false);
+		VariableUtile.textesFiltres.add(VariableUtile.textFiltreTechnique);
+		VariableUtile.root.getChildren().add(VariableUtile.textFiltreTechnique);
+
+		VariableUtile.boutonFiltreTechniqueFaible = new Bouton(VariableUtile.px * 11, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_faible");
+		VariableUtile.boutonFiltreTechniqueFaible.finirGenerationBoutonFiltre("Faible");
+
+		VariableUtile.boutonFiltreTechniqueModeree = new Bouton(VariableUtile.px * 11, VariableUtile.py * 37,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_moderee");
+		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("Modérée");
+
+		VariableUtile.boutonFiltreTechniqueIntense = new Bouton(VariableUtile.px * 11, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_elevee");
+		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("Elevée");
+
+		// Filtres genre -- Opacité paint.net 150
+		VariableUtile.texteFiltreGenre = new Text(VariableUtile.px * 35, VariableUtile.py * 14, "Genre");
+		VariableUtile.texteFiltreGenre.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
+		VariableUtile.texteFiltreGenre.setWrappingWidth(VariableUtile.px * 9);
+		VariableUtile.texteFiltreGenre.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.texteFiltreGenre.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.texteFiltreGenre.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.texteFiltreGenre.setVisible(false);
+		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreGenre);
+		VariableUtile.root.getChildren().add(VariableUtile.texteFiltreGenre);
+
+		VariableUtile.boutonFiltreSportif = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Sportif");
+		VariableUtile.boutonFiltreSportif.finirGenerationBoutonFiltre(null, Genre.Sportif);
+
+		VariableUtile.boutonFiltreElectro = new Bouton(VariableUtile.px * 25, VariableUtile.py * 37,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Electro");
+		VariableUtile.boutonFiltreElectro.finirGenerationBoutonFiltre(null, Genre.Electro);
+
+		VariableUtile.boutonFiltreLatino = new Bouton(VariableUtile.px * 25, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Latino");
+		VariableUtile.boutonFiltreLatino.finirGenerationBoutonFiltre(null, Genre.Latino);
+
+		VariableUtile.boutonFiltreFolklore = new Bouton(VariableUtile.px * 36, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Folklore");
+		VariableUtile.boutonFiltreFolklore.finirGenerationBoutonFiltre("Folk", Genre.Folklore);
+
+		VariableUtile.boutonFiltreRandB = new Bouton(VariableUtile.px * 36, VariableUtile.py * 37,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "RandB");
+		VariableUtile.boutonFiltreRandB.finirGenerationBoutonFiltre("R&B", Genre.RandB);
+
+		VariableUtile.boutonFiltreRock = new Bouton(VariableUtile.px * 36, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rock");
+		VariableUtile.boutonFiltreRock.finirGenerationBoutonFiltre(null, Genre.Rock);
+
+		VariableUtile.boutonFiltreRetro = new Bouton(VariableUtile.px * 47, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Retro");
+		VariableUtile.boutonFiltreRetro.finirGenerationBoutonFiltre("Retro", Genre.Retro);
+
+		VariableUtile.boutonFiltrePop = new Bouton(VariableUtile.px * 47, VariableUtile.py * 37, VariableUtile.px * 6.8,
+				VariableUtile.px * 7, 25, "Pop");
+		VariableUtile.boutonFiltrePop.finirGenerationBoutonFiltre("Pop", Genre.Pop);
+
+		VariableUtile.boutonFiltreJazzy = new Bouton(VariableUtile.px * 47, VariableUtile.py * 57,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Jazzy");
+		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
+
+		// Filtres nombre de danseurs -- Opacité paint.net 160
+		VariableUtile.texteFiltreNbDanseurs = new Text(VariableUtile.px * 65, VariableUtile.py * 14,
+				"Nombre de danseurs");
+		VariableUtile.texteFiltreNbDanseurs.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
+		VariableUtile.texteFiltreNbDanseurs.setWrappingWidth(VariableUtile.px * 30);
+		VariableUtile.texteFiltreNbDanseurs.setTextAlignment(TextAlignment.CENTER);
+		VariableUtile.texteFiltreNbDanseurs.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
+		VariableUtile.texteFiltreNbDanseurs.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.texteFiltreNbDanseurs.setVisible(false);
+		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreNbDanseurs);
+		VariableUtile.root.getChildren().add(VariableUtile.texteFiltreNbDanseurs);
+
+		VariableUtile.boutonFiltre1Danseur = new Bouton(VariableUtile.px * 61, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "UnDanseur");
+		VariableUtile.boutonFiltre1Danseur.finirGenerationBoutonFiltre("Un", 1);
+
+		VariableUtile.boutonFiltre2Danseurs = new Bouton(VariableUtile.px * 70, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "DeuxDanseurs");
+		VariableUtile.boutonFiltre2Danseurs.finirGenerationBoutonFiltre("Deux", 2);
+
+		VariableUtile.boutonFiltre3Danseurs = new Bouton(VariableUtile.px * 79, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "TroisDanseurs");
+		VariableUtile.boutonFiltre3Danseurs.finirGenerationBoutonFiltre("Trois", 3);
+
+		VariableUtile.boutonFiltre4Danseurs = new Bouton(VariableUtile.px * 88, VariableUtile.py * 17,
+				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "QuatreDanseurs");
+		VariableUtile.boutonFiltre4Danseurs.finirGenerationBoutonFiltre("Quatre +", 4);
 	}
 
 	public static void trierDanse(Tri modeDeTri) {
@@ -765,7 +825,7 @@ public class MainDanse extends Application {
 					&& (VariableUtile.boutonFiltreTechniqueFaible.etatValide || danse.technique != 1)
 					&& (VariableUtile.boutonFiltreTechniqueModeree.etatValide || danse.technique != 2)
 					&& (VariableUtile.boutonFiltreTechniqueIntense.etatValide || danse.technique != 3)
-					&& (aAuMoinsUnGenreActive(danse))) {
+					&& aAuMoinsUnGenreActive(danse) && aAuMoinsUnNbDanseursActive(danse)) {
 				VariableUtile.dansesFiltrees.add(danse);
 			}
 		}
@@ -816,7 +876,38 @@ public class MainDanse extends Application {
 		} else {
 			return false;
 		}
+	}
 
+	protected boolean aAuMoinsUnNbDanseursActive(Danse danse) {
+		boolean tousFiltresNbActifs = true;
+		for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+			if (boutonFiltre.nbDanseurs != 0) {
+				if (boutonFiltre.etatValide) {
+					if (danse.genres.contains(Genre.Duo)) {
+						if (boutonFiltre.nbDanseurs == 2) {
+							return true;
+						}
+					} else if (danse.genres.contains(Genre.Trio)) {
+						if (boutonFiltre.nbDanseurs == 3) {
+							return true;
+						}
+					} else if (danse.genres.contains(Genre.Quatuor) || danse.genres.contains(Genre.Quintette)) {
+						if (boutonFiltre.nbDanseurs == 4) {
+							return true;
+						}
+					} else if (boutonFiltre.nbDanseurs == 1) {
+						return true;
+					}
+				} else {
+					tousFiltresNbActifs = false;
+				}
+			}
+		}
+		if (tousFiltresNbActifs) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static boolean sauterDansesVides() {

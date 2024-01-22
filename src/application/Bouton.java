@@ -35,6 +35,7 @@ public class Bouton extends Parent {
 	DropShadow effetText;
 	boolean etatValide;
 	Genre genre;
+	int nbDanseurs;
 	Tri typeTri;
 	Bouton changerDanseBouton;
 	int emplacement;
@@ -458,12 +459,27 @@ public class Bouton extends Parent {
 		this.setEffect(null);
 	}
 
+	public void finirGenerationBoutonFiltre(String titreDifferent) {
+		finirGenerationBoutonFiltre(titreDifferent, null, 0);
+	}
+
 	public void finirGenerationBoutonFiltre(String titreDifferent, Genre genre) {
+		finirGenerationBoutonFiltre(titreDifferent, genre, 0);
+	}
+
+	public void finirGenerationBoutonFiltre(String titreDifferent, int nbDanseurs) {
+		finirGenerationBoutonFiltre(titreDifferent, null, nbDanseurs);
+	}
+
+	public void finirGenerationBoutonFiltre(String titreDifferent, Genre genre, int nbDanseurs) {
 		if (titreDifferent != null) {
 			text.setText(titreDifferent);
 		}
 		if (genre != null) {
 			this.genre = genre;
+		}
+		if (nbDanseurs != 0) {
+			this.nbDanseurs = nbDanseurs;
 		}
 		this.setVisible(false);
 		this.toFront();
@@ -486,6 +502,22 @@ public class Bouton extends Parent {
 							}
 						}
 					}
+				} else if (nbDanseurs != 0) {
+					boolean tousLesNbActives = true;
+					for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+						if (boutonFiltre.nbDanseurs != 0 && !boutonFiltre.etatValide) {
+							tousLesNbActives = false;
+							break;
+						}
+					}
+					if (tousLesNbActives) {
+						comportementClassique = false;
+						for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+							if (boutonFiltre.nbDanseurs != 0 && boutonFiltre.nbDanseurs != nbDanseurs) {
+								boutonFiltre.invaliderBouton();
+							}
+						}
+					}
 				}
 				if (comportementClassique) {
 					if (etatValide) {
@@ -498,6 +530,7 @@ public class Bouton extends Parent {
 		});
 		VariableUtile.boutonsFiltres.add(this);
 	}
+
 	public void finirGenerationBoutonTri(String titreDifferent, Tri typeTri) {
 		if (titreDifferent != null) {
 			text.setText(titreDifferent);
@@ -511,7 +544,7 @@ public class Bouton extends Parent {
 			public void handle(MouseEvent me) {
 				if (typeTri != null) {
 					for (Bouton boutonFiltre : VariableUtile.boutonsTri) {
-						if (boutonFiltre.typeTri != null ) {
+						if (boutonFiltre.typeTri != null) {
 							if (boutonFiltre != Bouton.this) {
 								boutonFiltre.invaliderBouton();
 							} else {
@@ -523,6 +556,6 @@ public class Bouton extends Parent {
 			}
 		});
 		VariableUtile.boutonsTri.add(this);
-		validerBouton(); //Pour finir l'initilisation
+		validerBouton(); // Pour finir l'initilisation
 	}
 }

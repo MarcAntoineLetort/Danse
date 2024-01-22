@@ -61,6 +61,8 @@ public class VariableUtile {
 	public static Danse danseNeant;
 	public static Text textPage;
 	public static DropShadow effetTextPage;
+	public static Bouton boutonPrecedent;
+	public static Bouton boutonSuivant;
 	public static Bouton boutonQuitter;
 	public static Bouton boutonRejouer;
 	public static Bouton boutonPasser;
@@ -75,7 +77,8 @@ public class VariableUtile {
 	public static Bouton boutonReinitialiserSelection;
 	public static Text textFiltreIntensite;
 	public static Text textFiltreTechnique;
-	public static Text textFiltreGenre;
+	public static Text texteFiltreGenre;
+	public static Text texteFiltreNbDanseurs;
 	public static Bouton boutonFiltreIntensiteFaible;
 	public static Bouton boutonFiltreIntensiteModeree;
 	public static Bouton boutonFiltreIntensiteIntense;
@@ -91,6 +94,10 @@ public class VariableUtile {
 	public static Bouton boutonFiltreRetro;
 	public static Bouton boutonFiltrePop;
 	public static Bouton boutonFiltreJazzy;
+	public static Bouton boutonFiltre1Danseur;
+	public static Bouton boutonFiltre2Danseurs;
+	public static Bouton boutonFiltre3Danseurs;
+	public static Bouton boutonFiltre4Danseurs;
 	public static Bouton boutonFiltreValider;
 	public static Bouton boutonFiltreReinitialiser;
 	public static Bouton boutonTriAleatoire;
