@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
@@ -288,12 +289,15 @@ public class MainDanse extends Application {
 					new java.util.Timer().schedule(new java.util.TimerTask() {
 						@Override
 						public void run() {
-							VariableUtile.playerVideo.play();
+							Platform.runLater(() -> {
+								VariableUtile.playerVideo.play();
 
-							finirDecompte();
-							VariableUtile.afficherBarreAction();
-							VariableUtile.mediaView.setVisible(true);
-							VariableUtile.scene.setCursor(Cursor.NONE);
+								finirDecompte();
+								VariableUtile.afficherBarreAction();
+								VariableUtile.mediaView.setVisible(true);
+								VariableUtile.mediaView.toFront();
+								VariableUtile.scene.setCursor(Cursor.NONE);
+							});
 						}
 					}, 3500);
 				} else {
