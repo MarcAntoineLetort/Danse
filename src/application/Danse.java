@@ -46,7 +46,7 @@ public class Danse {
 	private void importerImages() {
 		URL imageURL1 = null;
 		URL imageURL2 = null;
-		File dossierImagesDanses = new File("C:\\Users\\marca\\Documents\\Java\\Danse\\Ressources\\images danses");
+		File dossierImagesDanses = VariableUtile.dossierImagesDanses;
 		try {
 			imageURL1 = new URL("file:\\" + dossierImagesDanses + "\\" + titreMusique + "1.png");
 		} catch (MalformedURLException e) {
@@ -62,8 +62,14 @@ public class Danse {
 			a.show();
 		}
 
-		this.imageDanse1 = new Image(imageURL1.toExternalForm());
-		this.imageDanse2 = new Image(imageURL2.toExternalForm());
+		imageDanse1 = new Image(imageURL1.toExternalForm());
+		imageDanse2 = new Image(imageURL2.toExternalForm());
+		if (imageDanse1.isError()) {
+			imageDanse1 = null;
+		}
+		if (imageDanse2.isError()) {
+			imageDanse2 = null;
+		}
 	}
 
 	// Constructeur utilisé pour le néant

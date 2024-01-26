@@ -186,7 +186,7 @@ public class MainDanse extends Application {
 		});
 
 		validerFiltre();
-
+		
 		if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
 			VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
 		} else {
@@ -714,6 +714,7 @@ public class MainDanse extends Application {
 			Scanner scanner;
 			scanner = new Scanner(fichierConfig);
 			VariableUtile.dossierDanses = new File(scanner.nextLine());
+			VariableUtile.dossierImagesDanses = new File(scanner.nextLine());
 			VariableUtile.dossierImports = new File(scanner.nextLine());
 			VariableUtile.fichierInfosDanses = new File(scanner.nextLine());
 

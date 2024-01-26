@@ -35,6 +35,7 @@ public class VariableUtile {
 	public static Color couleur2 = Color.WHITESMOKE;
 	public static int page = 0;
 	public static File dossierDanses;
+	public static File dossierImagesDanses;
 	public static File dossierImports;
 	public static File fichierInfosDanses;
 	public static ArrayList<Bouton> boutonsDanse = new ArrayList<>();
