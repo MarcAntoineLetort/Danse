@@ -85,7 +85,7 @@ public class MainDanse extends Application {
 		// TODO ajouter le filtre version jd
 
 		// TODO A mettre plus fort : hey girl
-
+		
 		genererBoutonsFinDeDanse();
 
 		VariableUtile.dansesFiltrees.addAll(VariableUtile.danses.values());

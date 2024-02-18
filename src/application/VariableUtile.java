@@ -376,6 +376,8 @@ public class VariableUtile {
 		cacherEcranSelection();
 		cacherBarreAction();
 		afficherMenuPrincipal();
+		
+		VariableUtile.videoEnCours = false;
 
 		primaryStage.setFullScreen(false);
 	}
