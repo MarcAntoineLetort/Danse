@@ -735,9 +735,14 @@ public class MainDanse extends Application {
 					titreMusique = nomCompletDanse.substring(0, nomCompletDanse.indexOf(" - "));
 					String versionString = nomCompletDanse.substring(nomCompletDanse.indexOf(" - ") + 3,
 							nomCompletDanse.lastIndexOf("."));
-					if (!versionString.contains(" ")) {
-						version = Version.valueOf(versionString);
-					} else {
+					Version[] versions = Version.values();
+					for (int i = 0; i < versions.length; i++) {
+						if(String.valueOf(versions[i]).equals(versionString)){
+							version = Version.valueOf(versionString);
+							break;
+						}
+					}
+					if (version == null) {
 						// Nom non conforme
 						titreMusique = nomCompletDanse;
 					}
