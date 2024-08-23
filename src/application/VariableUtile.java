@@ -4,6 +4,7 @@ import java.awt.AWTException;
 import java.awt.MouseInfo;
 import java.awt.Robot;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -272,8 +273,13 @@ public class VariableUtile {
 			} while (musiquesDejaChoisiees.contains(aleaVideo) && dansesFiltrees.size() >= i);
 			musiquesDejaChoisiees.add(aleaVideo);
 
-			MediaPlayer playerVideoMelange = new MediaPlayer(new Media(VariableUtile.class
-					.getResource("video/" + dansesFiltrees.get(aleaVideo - 1).nomVideo).toExternalForm()));
+			MediaPlayer playerVideoMelange = null;
+			try {
+				playerVideoMelange = new MediaPlayer(new Media(
+						new File(VariableUtile.dossierDanses + "\\" + dansesFiltrees.get(aleaVideo - 1).nomVideo).toURI().toURL().toExternalForm()));
+			} catch (MalformedURLException e) {
+				MainDanse.afficherErreur("Impossible de charger la vidéo " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
+			}
 			System.out.println(dansesFiltrees.get(aleaVideo - 1).nomVideo + " n°" + i);
 			MediaView mediaViewMelange = new MediaView(playerVideoMelange);
 			VariableUtile.root.getChildren().add(mediaViewMelange);

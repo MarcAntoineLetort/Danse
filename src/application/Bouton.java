@@ -390,9 +390,9 @@ public class Bouton extends Parent {
 		text.setFont(new Font(VariableUtile.police, taillePolice));
 		text.setWrappingWidth(largeur);
 		text.setTextAlignment(TextAlignment.CENTER);
-		text.setFill(VariableUtile.couleur1);
+		text.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
 		DropShadow effetText = new DropShadow();
-		effetText.setColor(VariableUtile.couleur1);
+		effetText.setColor(VariableUtile.couleur1.invert());
 		effetText.setRadius(50);
 		effetText.setSpread(0.8);
 		text.setEffect(effetText);
