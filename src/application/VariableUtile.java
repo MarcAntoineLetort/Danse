@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -48,6 +49,7 @@ public class VariableUtile {
 	public static ArrayList<Bouton> boutonsTriAnnexes = new ArrayList<>();
 	public static ArrayList<Text> textesFiltres = new ArrayList<>();
 	public static ArrayList<Text> textes = new ArrayList<>();
+	public static ArrayList<Node> elementAAfficher = new ArrayList<>();
 	public static MediaPlayer playerVideo;
 	public static MediaView mediaView;
 	public static RadialGradient shadePaint;
@@ -127,8 +129,8 @@ public class VariableUtile {
 
 	public static void genererTextPage() {
 		if (textPage != null && danseSelectionnee != null) {
-			textPage.setText("Danse " + danseSelectionnee.ordreActuel + "/" + dansesFiltrees.size() + " - Page " + (page + 1)
-					+ "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
+			textPage.setText("Danse " + danseSelectionnee.ordreActuel + "/" + dansesFiltrees.size() + " - Page "
+					+ (page + 1) + "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
 			textPage.setFill(couleur1.brighter().brighter().brighter().brighter());
 			effetTextPage.setColor(VariableUtile.couleur1.invert());
 		}
@@ -137,7 +139,9 @@ public class VariableUtile {
 	public static void genererBoutonSuggestion(boolean nettoyerPrecedant) {
 		if (nettoyerPrecedant) {
 			VariableUtile.boutonsMenu.remove(boutonSuggestion);
-			VariableUtile.root.getChildren().remove(VariableUtile.boutonSuggestion);
+			Platform.runLater(() -> {
+				VariableUtile.root.getChildren().remove(VariableUtile.boutonSuggestion);
+			});
 		}
 		if (dansesFiltrees.size() > 0) {
 			int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
@@ -168,31 +172,31 @@ public class VariableUtile {
 			VariableUtile.playerVideo.stop();
 			VariableUtile.playerVideo.dispose();
 		}
-		
+
 		// Démarrage de la vidéo
 		try {
 			VariableUtile.playerVideo = new MediaPlayer(new Media(
 					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
-			
+
 			VariableUtile.playerVideo.setOnReady(() -> {
-		        VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
-		        VariableUtile.root.getChildren().add(VariableUtile.mediaView);
+				VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
+				VariableUtile.root.getChildren().add(VariableUtile.mediaView);
 
-		        VariableUtile.playerVideo.setVolume(1);
+				VariableUtile.playerVideo.setVolume(1);
 
-		        final DoubleProperty width = VariableUtile.mediaView.fitWidthProperty();
-		        final DoubleProperty height = VariableUtile.mediaView.fitHeightProperty();
+				final DoubleProperty width = VariableUtile.mediaView.fitWidthProperty();
+				final DoubleProperty height = VariableUtile.mediaView.fitHeightProperty();
 
-		        width.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "width"));
-		        height.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "height"));
+				width.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "width"));
+				height.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "height"));
 
-		        VariableUtile.primaryStage.setFullScreen(true);
+				VariableUtile.primaryStage.setFullScreen(true);
 
-		        Platform.runLater(() -> {
-		            VariableUtile.playerVideo.play();
-		        });
-		    });
-			
+				Platform.runLater(() -> {
+					VariableUtile.playerVideo.play();
+				});
+			});
+
 		} catch (Exception e) {
 			MainDanse.afficherErreur(
 					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
@@ -345,16 +349,16 @@ public class VariableUtile {
 			}
 		}, 35000 * (morceauJoue - 1));
 	}
-	
-	public static void rembobinerVideo(int nbSecondes){
+
+	public static void rembobinerVideo(int nbSecondes) {
 		Duration currentTime = VariableUtile.playerVideo.getCurrentTime();
-        Duration newTime = currentTime.subtract(Duration.seconds(nbSecondes));
+		Duration newTime = currentTime.subtract(Duration.seconds(nbSecondes));
 
-        if (newTime.lessThan(Duration.ZERO)) {
-            newTime = Duration.ZERO;
-        }
+		if (newTime.lessThan(Duration.ZERO)) {
+			newTime = Duration.ZERO;
+		}
 
-        VariableUtile.playerVideo.seek(newTime);
+		VariableUtile.playerVideo.seek(newTime);
 	}
 
 	public static void stoperMelange() {
@@ -376,7 +380,7 @@ public class VariableUtile {
 		cacherEcranSelection();
 		cacherBarreAction();
 		afficherMenuPrincipal();
-		
+
 		VariableUtile.videoEnCours = false;
 
 		primaryStage.setFullScreen(false);
@@ -439,7 +443,7 @@ public class VariableUtile {
 			texteFiltre.setVisible(false);
 		}
 	}
-	
+
 	public static void cacherMenuTri() {
 		for (Bouton boutonTri : VariableUtile.boutonsTri) {
 			boutonTri.setVisible(false);
@@ -490,6 +494,7 @@ public class VariableUtile {
 		}
 		VariableUtile.barreRecherche.setVisible(true);
 	}
+
 	public static void afficherMenuTri() {
 		VariableUtile.modeTri = true;
 		for (Bouton boutonTri : VariableUtile.boutonsTri) {

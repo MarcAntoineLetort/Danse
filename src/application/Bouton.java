@@ -311,7 +311,9 @@ public class Bouton extends Parent {
 			}
 		});
 
-		VariableUtile.root.getChildren().add(this);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(this);
+		});
 
 		// Bouton de changement aléatoire de danse (mode sélection)
 		if (modeSelection) {
@@ -416,7 +418,9 @@ public class Bouton extends Parent {
 			}
 		});
 
-		VariableUtile.root.getChildren().add(this);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(this);
+		});
 	}
 
 	public void actualiserCouleur() {
@@ -438,7 +442,9 @@ public class Bouton extends Parent {
 		superTitre.setTextAlignment(TextAlignment.CENTER);
 		superTitre.setFill(danse.couleur1.brighter().brighter().brighter().brighter());
 		superTitre.setEffect(effetText);
-		this.getChildren().add(superTitre);
+		Platform.runLater(() -> {
+			this.getChildren().add(superTitre);
+		});
 	}
 
 	public void validerBouton() {

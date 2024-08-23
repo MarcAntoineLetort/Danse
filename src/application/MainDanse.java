@@ -21,6 +21,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -41,6 +42,7 @@ import javafx.util.Duration;
 public class MainDanse extends Application {
 	Media soundDecompte;
 	MediaPlayer mediaPlayerCompteur;
+	ImageView imageChargement;
 
 	@Override
 	public void start(Stage pStage) {
@@ -54,11 +56,74 @@ public class MainDanse extends Application {
 		VariableUtile.px = VariableUtile.largeurFenetre / 100;
 		VariableUtile.py = VariableUtile.hauteurFenetre / 100;
 
+		int alea = (int) (Math.random() * 4);
+		String imageChargementURI = null;
+		switch (alea) {
+		case 0:
+			imageChargementURI = "imageBouton/chargement_2.jpg";
+			VariableUtile.couleur1 = Color.rgb(55, 20, 95);
+			VariableUtile.couleur2 = Color.rgb(15, 55, 15);
+			break;
+		case 1:
+			imageChargementURI = "imageBouton/chargement_3.jpg";
+			VariableUtile.couleur1 = Color.rgb(95, 55, 0);
+			VariableUtile.couleur2 = Color.rgb(0, 20, 10);
+			break;
+		case 2:
+			imageChargementURI = "imageBouton/chargement_6.jpg";
+			VariableUtile.couleur1 = Color.rgb(0, 0, 95);
+			VariableUtile.couleur2 = Color.rgb(30, 20, 0);
+			break;
+		case 3:
+			imageChargementURI = "imageBouton/chargement_8.jpg";
+			VariableUtile.couleur1 = Color.rgb(0, 50, 90);
+			VariableUtile.couleur2 = Color.rgb(90, 90, 0);
+			break;
+
+		default:
+			break;
+		}
+
 		VariableUtile.shadePaint = new RadialGradient(0.5, 0.5, 0, 0, 1, true, CycleMethod.NO_CYCLE,
 				new Stop(1, VariableUtile.couleur1), new Stop(0, VariableUtile.couleur2));
 
 		VariableUtile.scene.setFill(VariableUtile.shadePaint);
 
+		VariableUtile.primaryStage.setScene(VariableUtile.scene);
+		VariableUtile.primaryStage.show();
+
+		imageChargement = new ImageView(VariableUtile.main.importerImage(imageChargementURI));
+		imageChargement.setX((VariableUtile.largeurFenetre - imageChargement.getImage().getWidth()) / 2);
+		imageChargement.setY((VariableUtile.hauteurFenetre - imageChargement.getImage().getHeight()) / 2);
+		VariableUtile.root.getChildren().add(imageChargement);
+
+		// Désactivation des interactions souris pendant le chargement
+		VariableUtile.root.setDisable(true);
+
+		Thread threadChargement = new Thread() {
+			public void run() {
+				chargerJeu();
+			}
+		};
+		threadChargement.start();
+
+		// Thread qui attend la fin de threadChargement
+		new Thread(() -> {
+			try {
+				threadChargement.join();
+				Platform.runLater(() -> {
+					// Réactivation des interactions souris
+					VariableUtile.root.setDisable(false);
+					VariableUtile.root.getChildren().remove(imageChargement);
+				});
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}).start();
+
+	}
+
+	private void chargerJeu() {
 		try {
 			soundDecompte = new Media(MainDanse.class.getResource("/application/selection1.mp3").toURI().toString());
 		} catch (URISyntaxException e) {
@@ -85,7 +150,7 @@ public class MainDanse extends Application {
 		// TODO ajouter le filtre version jd
 
 		// TODO A mettre plus fort : hey girl
-		
+
 		genererBoutonsFinDeDanse();
 
 		VariableUtile.dansesFiltrees.addAll(VariableUtile.danses.values());
@@ -135,7 +200,6 @@ public class MainDanse extends Application {
 		VariableUtile.effetTextPage.setRadius(50);
 		VariableUtile.effetTextPage.setSpread(0.8);
 		VariableUtile.textPage.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.root.getChildren().add(VariableUtile.textPage);
 
 		VariableUtile.textCompteur = new Text(VariableUtile.px * 0, VariableUtile.py * 65, "");
 		VariableUtile.textCompteur.setFont(new Font(VariableUtile.police, VariableUtile.py * 55));
@@ -144,7 +208,11 @@ public class MainDanse extends Application {
 		VariableUtile.textCompteur.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
 		VariableUtile.textCompteur.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.textCompteur.setVisible(false);
-		VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
+
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(VariableUtile.textPage);
+			VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
+		});
 
 		// Barre de recherche
 		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 50, VariableUtile.py * 2,
@@ -186,17 +254,16 @@ public class MainDanse extends Application {
 		});
 
 		validerFiltre();
-		
-		if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
-			VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
-		} else {
-			VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
-		}
 
-		VariableUtile.textCompteur.toFront();
-
-		VariableUtile.primaryStage.setScene(VariableUtile.scene);
-		VariableUtile.primaryStage.show();
+		Platform.runLater(() -> {
+			VariableUtile.textCompteur.toFront();
+			if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
+				VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+			} else {
+				VariableUtile.primaryStage.getIcons()
+						.add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
+			}
+		});
 	}
 
 	private void genererBoutonsPagePrincipale() {
@@ -499,7 +566,9 @@ public class MainDanse extends Application {
 		VariableUtile.textFiltreIntensite.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.textFiltreIntensite.setVisible(false);
 		VariableUtile.textesFiltres.add(VariableUtile.textFiltreIntensite);
-		VariableUtile.root.getChildren().add(VariableUtile.textFiltreIntensite);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(VariableUtile.textFiltreIntensite);
+		});
 
 		VariableUtile.boutonFiltreIntensiteFaible = new Bouton(VariableUtile.px * 2, VariableUtile.py * 17,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_faible");
@@ -521,7 +590,9 @@ public class MainDanse extends Application {
 		VariableUtile.textFiltreTechnique.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.textFiltreTechnique.setVisible(false);
 		VariableUtile.textesFiltres.add(VariableUtile.textFiltreTechnique);
-		VariableUtile.root.getChildren().add(VariableUtile.textFiltreTechnique);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(VariableUtile.textFiltreTechnique);
+		});
 
 		VariableUtile.boutonFiltreTechniqueFaible = new Bouton(VariableUtile.px * 11, VariableUtile.py * 17,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_faible");
@@ -544,7 +615,9 @@ public class MainDanse extends Application {
 		VariableUtile.texteFiltreGenre.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.texteFiltreGenre.setVisible(false);
 		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreGenre);
-		VariableUtile.root.getChildren().add(VariableUtile.texteFiltreGenre);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(VariableUtile.texteFiltreGenre);
+		});
 
 		VariableUtile.boutonFiltreSportif = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Sportif");
@@ -592,7 +665,9 @@ public class MainDanse extends Application {
 		VariableUtile.texteFiltreNbDanseurs.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.texteFiltreNbDanseurs.setVisible(false);
 		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreNbDanseurs);
-		VariableUtile.root.getChildren().add(VariableUtile.texteFiltreNbDanseurs);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(VariableUtile.texteFiltreNbDanseurs);
+		});
 
 		VariableUtile.boutonFiltre1Danseur = new Bouton(VariableUtile.px * 61, VariableUtile.py * 17,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "UnDanseur");
@@ -737,7 +812,7 @@ public class MainDanse extends Application {
 							nomCompletDanse.lastIndexOf("."));
 					Version[] versions = Version.values();
 					for (int i = 0; i < versions.length; i++) {
-						if(String.valueOf(versions[i]).equals(versionString)){
+						if (String.valueOf(versions[i]).equals(versionString)) {
 							version = Version.valueOf(versionString);
 							break;
 						}
@@ -784,7 +859,9 @@ public class MainDanse extends Application {
 				if (bouton.changerDanseBouton != null) {
 					VariableUtile.root.getChildren().remove(bouton.changerDanseBouton);
 				}
-				VariableUtile.root.getChildren().remove(bouton);
+				Platform.runLater(() -> {
+					VariableUtile.root.getChildren().remove(bouton);
+				});
 			}
 			VariableUtile.boutonsDanse.clear();
 		}
@@ -851,19 +928,6 @@ public class MainDanse extends Application {
 			VariableUtile.dansesFiltrees.retainAll(dansesRecherche);
 		}
 
-		// if (!VariableUtile.modeFiltre) {
-		// if (!VariableUtile.modeSelection) {
-		// VariableUtile.genererBoutonSuggestion(true);
-		// VariableUtile.genererTextPage();
-		// genererBoutonsDanse(true);
-		//
-		// VariableUtile.cacherMenuFiltres();
-		// VariableUtile.afficherMenuPrincipal();
-		// } else {
-		// VariableUtile.cacherMenuFiltres();
-		// VariableUtile.reafficherEcranSelection();
-		// }
-		// }
 		validerTri();
 	}
 

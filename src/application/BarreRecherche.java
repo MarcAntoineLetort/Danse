@@ -1,5 +1,6 @@
 package application;
 
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -34,7 +35,7 @@ public class BarreRecherche extends Parent {
 		Image imageBouton1 = VariableUtile.main.importerImage("imageBouton/" + nomImageBarre + "1.png");
 		this.imageViewBarre = new ImageView(imageBouton1);
 		double largeurImage = hauteur * 0.86;
-		imageViewBarre.setX(positionLargeur + 0.96*largeur - largeurImage);
+		imageViewBarre.setX(positionLargeur + 0.96 * largeur - largeurImage);
 		imageViewBarre.setY(positionHauteur + 0.07 * hauteur);
 		imageViewBarre.setFitWidth(largeurImage);
 		imageViewBarre.setFitHeight(hauteur * 0.86);
@@ -49,7 +50,9 @@ public class BarreRecherche extends Parent {
 		this.getChildren().add(cadre);
 		this.getChildren().add(imageViewBarre);
 		this.getChildren().add(text);
-		VariableUtile.root.getChildren().add(this);
+		Platform.runLater(() -> {
+			VariableUtile.root.getChildren().add(this);
+		});
 		cadre.toFront();
 	}
 
