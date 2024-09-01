@@ -249,7 +249,9 @@ public class Bouton extends Parent {
 							- VariableUtile.imageViewDanseEchangeSelection.getFitWidth() / 2);
 					VariableUtile.imageViewDanseEchangeSelection.setY(MouseInfo.getPointerInfo().getLocation().getY()
 							- VariableUtile.imageViewDanseEchangeSelection.getFitHeight() / 2);
-					VariableUtile.root.getChildren().add(VariableUtile.imageViewDanseEchangeSelection);
+					Platform.runLater(() -> {
+						VariableUtile.root.getChildren().add(VariableUtile.imageViewDanseEchangeSelection);
+					});
 
 					VariableUtile.scene.setCursor(Cursor.CLOSED_HAND);
 					me.setDragDetect(true);

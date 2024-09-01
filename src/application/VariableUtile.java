@@ -146,10 +146,12 @@ public class VariableUtile {
 		}
 		if (dansesFiltrees.size() > 0) {
 			int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
-			boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, dansesFiltrees.get(aleaSuggestion - 1),
-					false, 6);
-			boutonSuggestion.genererSuperTitre("Suggestion");
-			VariableUtile.boutonsMenu.add(boutonSuggestion);
+			Platform.runLater(() -> {
+				boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, dansesFiltrees.get(aleaSuggestion - 1),
+						false, 6);
+				boutonSuggestion.genererSuperTitre("Suggestion");
+				VariableUtile.boutonsMenu.add(boutonSuggestion);
+			});
 		}
 	}
 
@@ -181,7 +183,9 @@ public class VariableUtile {
 
 			VariableUtile.playerVideo.setOnReady(() -> {
 				VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
-				VariableUtile.root.getChildren().add(VariableUtile.mediaView);
+//				Platform.runLater(() -> {
+					VariableUtile.root.getChildren().add(VariableUtile.mediaView);
+//				});
 
 				VariableUtile.playerVideo.setVolume(1);
 
@@ -227,11 +231,15 @@ public class VariableUtile {
 					(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
 
 			if (VariableUtile.modeIllimite) {
-				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-				VariableUtile.lancerVideoAuHasard();
+				Platform.runLater(() -> {
+					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+					VariableUtile.lancerVideoAuHasard();
+				});
 			}
 			if (VariableUtile.modeSelection) {
-				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+//				Platform.runLater(() -> {
+					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+//				});
 				numeroProchaineDanseSelection++;
 				if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
 					if (MainDanse.sauterDansesVides()) {
@@ -276,13 +284,17 @@ public class VariableUtile {
 			MediaPlayer playerVideoMelange = null;
 			try {
 				playerVideoMelange = new MediaPlayer(new Media(
-						new File(VariableUtile.dossierDanses + "\\" + dansesFiltrees.get(aleaVideo - 1).nomVideo).toURI().toURL().toExternalForm()));
+						new File(VariableUtile.dossierDanses + "\\" + dansesFiltrees.get(aleaVideo - 1).nomVideo)
+								.toURI().toURL().toExternalForm()));
 			} catch (MalformedURLException e) {
-				MainDanse.afficherErreur("Impossible de charger la vidéo " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
+				MainDanse
+						.afficherErreur("Impossible de charger la vidéo " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
 			}
 			System.out.println(dansesFiltrees.get(aleaVideo - 1).nomVideo + " n°" + i);
 			MediaView mediaViewMelange = new MediaView(playerVideoMelange);
-			VariableUtile.root.getChildren().add(mediaViewMelange);
+			Platform.runLater(() -> {
+				VariableUtile.root.getChildren().add(mediaViewMelange);
+			});
 			mediaViewMelange.setVisible(false);
 			VariableUtile.primaryStage.setFullScreen(true);
 			VariableUtile.mediaViewsMelange.add(mediaViewMelange);
@@ -338,7 +350,9 @@ public class VariableUtile {
 					playerVideoMelange.setOnEndOfMedia(() -> {
 						VariableUtile.playerVideosMelange.remove(playerVideoMelange);
 						mediaViewMelange.setVisible(false);
-						VariableUtile.root.getChildren().remove(mediaViewMelange);
+						Platform.runLater(() -> {
+							VariableUtile.root.getChildren().remove(mediaViewMelange);
+						});
 						VariableUtile.mediaViewsMelange.remove(mediaViewMelange);
 						if (morceauJoue == 6) {
 							System.out.println("fin morceau 6");
@@ -374,7 +388,9 @@ public class VariableUtile {
 		VariableUtile.playerVideosMelange.clear();
 		for (MediaView mediaViewMelange : VariableUtile.mediaViewsMelange) {
 			mediaViewMelange.setVisible(false);
-			VariableUtile.root.getChildren().remove(mediaViewMelange);
+			Platform.runLater(() -> {
+				VariableUtile.root.getChildren().remove(mediaViewMelange);
+			});
 		}
 		VariableUtile.mediaViewsMelange.clear();
 	}
@@ -532,7 +548,9 @@ public class VariableUtile {
 		if (!VariableUtile.modeMelange) {
 			VariableUtile.playerVideo.stop();
 			VariableUtile.mediaView.setVisible(false);
-			VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+			Platform.runLater(() -> {
+				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+			});
 		} else {
 			VariableUtile.modeMelange = false;
 			VariableUtile.stoperMelange();

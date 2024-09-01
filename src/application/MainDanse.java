@@ -96,7 +96,7 @@ public class MainDanse extends Application {
 		imageChargement.setX((VariableUtile.largeurFenetre - imageChargement.getImage().getWidth()) / 2);
 		imageChargement.setY((VariableUtile.hauteurFenetre - imageChargement.getImage().getHeight()) / 2);
 		VariableUtile.root.getChildren().add(imageChargement);
-
+		
 		// Désactivation des interactions souris pendant le chargement
 		VariableUtile.root.setDisable(true);
 
@@ -381,7 +381,9 @@ public class MainDanse extends Application {
 			public void handle(MouseEvent me) {
 				VariableUtile.playerVideo.stop();
 				VariableUtile.mediaView.setVisible(false);
-				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+				Platform.runLater(() -> {
+					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+				});
 				VariableUtile.lancerVideoAuHasard();
 			}
 		});
@@ -857,7 +859,9 @@ public class MainDanse extends Application {
 			for (Bouton bouton : VariableUtile.boutonsDanse) {
 				bouton.setVisible(false);
 				if (bouton.changerDanseBouton != null) {
-					VariableUtile.root.getChildren().remove(bouton.changerDanseBouton);
+					Platform.runLater(() -> {
+						VariableUtile.root.getChildren().remove(bouton.changerDanseBouton);
+					});
 				}
 				Platform.runLater(() -> {
 					VariableUtile.root.getChildren().remove(bouton);
@@ -1015,15 +1019,17 @@ public class MainDanse extends Application {
 	}
 
 	public static void afficherErreur(String message) {
-		Alert a = new Alert(AlertType.ERROR);
-		a.setContentText(message);
-		a.show();
+		Platform.runLater(() -> {
+			Alert a = new Alert(AlertType.ERROR);
+			a.setContentText(message);
+			a.show();
+		});
 	}
 
 	public static void main(String[] args) {
 		launch(args);
 	}
-	
+
 	@Override
 	public void stop() {
 		System.exit(0);
