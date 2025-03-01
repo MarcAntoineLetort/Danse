@@ -125,6 +125,16 @@ public class MainDanse extends Application {
 					// Réactivation des interactions souris
 					VariableUtile.root.setDisable(false);
 					VariableUtile.root.getChildren().remove(imageChargement);
+					validerFiltre();
+					Platform.runLater(() -> {
+						VariableUtile.textCompteur.toFront();
+						if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
+							VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
+						} else {
+							VariableUtile.primaryStage.getIcons()
+									.add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
+						}
+					});
 				});
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -225,6 +235,7 @@ public class MainDanse extends Application {
 		// Barre de recherche
 		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 50, VariableUtile.py * 2,
 				VariableUtile.px * 17, VariableUtile.py * 3.5, "LoupePetite");
+		VariableUtile.barreRecherche.setVisible(false);
 
 		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent ke) {
@@ -260,26 +271,15 @@ public class MainDanse extends Application {
 				}
 			}
 		});
-
-		validerFiltre();
-
-		Platform.runLater(() -> {
-			VariableUtile.textCompteur.toFront();
-			if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
-				VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
-			} else {
-				VariableUtile.primaryStage.getIcons()
-						.add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
-			}
-		});
 	}
 
 	private void genererBoutonsPagePrincipale() {
 
-		genererBoutonsDanse(false);
+		genererBoutonsDanse(false, false, false);
 
 		VariableUtile.boutonSuivant = new Bouton(VariableUtile.px * 75, VariableUtile.py * 45, VariableUtile.px * 7,
 				VariableUtile.px * 7, 25, "Suivant");
+		VariableUtile.boutonSuivant.setVisible(false);
 
 		VariableUtile.boutonSuivant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -294,6 +294,7 @@ public class MainDanse extends Application {
 		});
 		VariableUtile.boutonPrecedent = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
 				VariableUtile.px * 7, 25, "Précédent");
+		VariableUtile.boutonPrecedent.setVisible(false);
 
 		VariableUtile.boutonPrecedent.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -401,7 +402,7 @@ public class MainDanse extends Application {
 		// Mélange
 		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Mélange");
-		VariableUtile.boutonMelange.setVisible(true);
+		VariableUtile.boutonMelange.setVisible(false);
 		VariableUtile.boutonMelange.toFront();
 		VariableUtile.boutonMelange.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -415,7 +416,7 @@ public class MainDanse extends Application {
 		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Illimite");
 		VariableUtile.boutonIllimite.text.setText("Illimité");
-		VariableUtile.boutonIllimite.setVisible(true);
+		VariableUtile.boutonIllimite.setVisible(false);
 		VariableUtile.boutonIllimite.toFront();
 		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -430,7 +431,7 @@ public class MainDanse extends Application {
 		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Selection");
 		VariableUtile.boutonSelection.text.setText("Sélection");
-		VariableUtile.boutonSelection.setVisible(true);
+		VariableUtile.boutonSelection.setVisible(false);
 		VariableUtile.boutonSelection.toFront();
 		VariableUtile.boutonSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -477,7 +478,7 @@ public class MainDanse extends Application {
 	private void genererBoutonsTri() {
 		VariableUtile.boutonTrier = new Bouton(VariableUtile.px * 10, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Trier");
-		VariableUtile.boutonTrier.setVisible(true);
+		VariableUtile.boutonTrier.setVisible(false);
 		VariableUtile.boutonTrier.toFront();
 		VariableUtile.boutonTrier.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -534,7 +535,7 @@ public class MainDanse extends Application {
 	private void genererBoutonsFiltre() {
 		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Filtrer");
-		VariableUtile.boutonFiltrer.setVisible(true);
+		VariableUtile.boutonFiltrer.setVisible(false);
 		VariableUtile.boutonFiltrer.toFront();
 		VariableUtile.boutonFiltrer.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -858,10 +859,10 @@ public class MainDanse extends Application {
 	}
 
 	public static void genererBoutonsDanse(boolean nettoyer) {
-		genererBoutonsDanse(nettoyer, false);
+		genererBoutonsDanse(nettoyer, false, true);
 	}
 
-	public static void genererBoutonsDanse(boolean nettoyer, boolean modeSelection) {
+	public static void genererBoutonsDanse(boolean nettoyer, boolean modeSelection, boolean visible) {
 		// emplacement : mettre 7 par défaut
 		if (nettoyer) {
 			for (Bouton bouton : VariableUtile.boutonsDanse) {
@@ -893,6 +894,9 @@ public class MainDanse extends Application {
 				}
 				Bouton boutonDanse = new Bouton(largeurPositionBouton, hauteurPositionBouton, VariableUtile.px * 17,
 						VariableUtile.py * 33, 20, danse, modeSelection ? true : false, i);
+				if(!visible){
+					boutonDanse.setVisible(false);
+				}
 
 				VariableUtile.boutonsDanse.add(boutonDanse);
 

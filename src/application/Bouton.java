@@ -289,7 +289,7 @@ public class Bouton extends Parent {
 						danceCible);
 
 				VariableUtile.boutonGlissePourEchangeSelection = null;
-				MainDanse.genererBoutonsDanse(true, true);
+				MainDanse.genererBoutonsDanse(true, true, true);
 			}
 		});
 
@@ -346,7 +346,7 @@ public class Bouton extends Parent {
 						VariableUtile.dansesSelectionnees.set(emplacement, VariableUtile.danseNeant);
 					}
 
-					MainDanse.genererBoutonsDanse(true, true);
+					MainDanse.genererBoutonsDanse(true, true, true);
 
 				}
 			});

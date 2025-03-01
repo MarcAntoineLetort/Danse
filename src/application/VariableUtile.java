@@ -432,7 +432,7 @@ public class VariableUtile {
 			}
 		}
 
-		MainDanse.genererBoutonsDanse(true, true);
+		MainDanse.genererBoutonsDanse(true, true, true);
 	}
 
 	public static void cacherMenuPrincipal() {

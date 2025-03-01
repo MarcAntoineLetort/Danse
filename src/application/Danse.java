@@ -32,8 +32,6 @@ public class Danse {
 		if (version != null) {
 			this.nomVideo = titreMusique + " - " + version.toString() + ".mp4";
 			this.version = version;
-
-			//importerImages();
 		} else {
 			// Nom non conforme
 			this.nomVideo = titreMusique;
