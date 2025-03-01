@@ -33,7 +33,7 @@ public class Danse {
 			this.nomVideo = titreMusique + " - " + version.toString() + ".mp4";
 			this.version = version;
 
-			importerImages();
+			//importerImages();
 		} else {
 			// Nom non conforme
 			this.nomVideo = titreMusique;
@@ -43,7 +43,7 @@ public class Danse {
 		VariableUtile.danses.put(titreMusique, this);
 	}
 
-	private void importerImages() {
+	public void importerImages() {
 		URL imageURL1 = null;
 		URL imageURL2 = null;
 		File dossierImagesDanses = VariableUtile.dossierImagesDanses;
@@ -72,7 +72,7 @@ public class Danse {
 		}
 	}
 
-	// Constructeur utilisé pour le néant
+	// Constructeur utilisÃ© pour le nÃ©ant
 	public Danse(String titreMusique, String titreImage, Color couleur1, Color couleur2) {
 		super();
 		this.nomVideo = "aucun";

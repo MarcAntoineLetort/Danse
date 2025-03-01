@@ -147,8 +147,11 @@ public class VariableUtile {
 		if (dansesFiltrees.size() > 0) {
 			int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
 			Platform.runLater(() -> {
-				boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, dansesFiltrees.get(aleaSuggestion - 1),
-						false, 6);
+				Danse danse = dansesFiltrees.get(aleaSuggestion - 1);
+				if (danse.imageDanse1 == null) {
+					danse.importerImages();
+				}
+				boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, danse, false, 6);
 				boutonSuggestion.genererSuperTitre("Suggestion");
 				VariableUtile.boutonsMenu.add(boutonSuggestion);
 			});
@@ -166,7 +169,7 @@ public class VariableUtile {
 					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
 		} catch (Exception e) {
 			MainDanse.afficherErreur(
-					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
+					"Impossible d'ouvrir la vidÃ©o " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
 		}
 	}
 
@@ -176,16 +179,16 @@ public class VariableUtile {
 			VariableUtile.playerVideo.dispose();
 		}
 
-		// Démarrage de la vidéo
+		// DÃ©marrage de la vidÃ©o
 		try {
 			VariableUtile.playerVideo = new MediaPlayer(new Media(
 					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
 
 			VariableUtile.playerVideo.setOnReady(() -> {
 				VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
-//				Platform.runLater(() -> {
-					VariableUtile.root.getChildren().add(VariableUtile.mediaView);
-//				});
+				// Platform.runLater(() -> {
+				VariableUtile.root.getChildren().add(VariableUtile.mediaView);
+				// });
 
 				VariableUtile.playerVideo.setVolume(1);
 
@@ -204,7 +207,7 @@ public class VariableUtile {
 
 		} catch (Exception e) {
 			MainDanse.afficherErreur(
-					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
+					"Impossible d'ouvrir la vidÃ©o " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
 		}
 
 		cacherMenuPrincipal();
@@ -218,13 +221,13 @@ public class VariableUtile {
 
 		VariableUtile.playerVideo.setOnEndOfMedia(() -> {
 
-			// Mouvement de souris pour empêcher la veille
+			// Mouvement de souris pour empÃ©cher la veille
 			Robot hal = null;
 			try {
 				hal = new Robot();
 			} catch (AWTException e) {
 				Alert a = new Alert(AlertType.ERROR);
-				a.setContentText("Echec de la génération du robot de mouvement de souris : " + e);
+				a.setContentText("Echec de la gÃ©nÃ©ration du robot de mouvement de souris : " + e);
 				a.show();
 			}
 			hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
@@ -237,9 +240,9 @@ public class VariableUtile {
 				});
 			}
 			if (VariableUtile.modeSelection) {
-//				Platform.runLater(() -> {
-					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-//				});
+				// Platform.runLater(() -> {
+				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+				// });
 				numeroProchaineDanseSelection++;
 				if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
 					if (MainDanse.sauterDansesVides()) {
@@ -258,7 +261,7 @@ public class VariableUtile {
 	}
 
 	public static void lancerMelange() {
-		// Arrêt de la musique
+		// ArrÃªt de la musique
 		if (VariableUtile.playerVideo != null) {
 			VariableUtile.playerVideo.stop();
 		}
@@ -288,9 +291,9 @@ public class VariableUtile {
 								.toURI().toURL().toExternalForm()));
 			} catch (MalformedURLException e) {
 				MainDanse
-						.afficherErreur("Impossible de charger la vidéo " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
+						.afficherErreur("Impossible de charger la vidÃ©o " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
 			}
-			System.out.println(dansesFiltrees.get(aleaVideo - 1).nomVideo + " n°" + i);
+			System.out.println(dansesFiltrees.get(aleaVideo - 1).nomVideo + " nÂ°" + i);
 			MediaView mediaViewMelange = new MediaView(playerVideoMelange);
 			Platform.runLater(() -> {
 				VariableUtile.root.getChildren().add(mediaViewMelange);
@@ -310,8 +313,8 @@ public class VariableUtile {
 		new java.util.Timer().schedule(new java.util.TimerTask() {
 			@Override
 			public void run() {
-				// TODO réparer dernière musique parfois non lancée
-				System.out.println("numéro = " + morceauJoue);
+				// TODO rÃ©parer derniÃ¨re musique parfois non lancÃ©e
+				System.out.println("numÃ©ro = " + morceauJoue);
 
 				if (VariableUtile.modeMelange) {
 					playerVideoMelange.setVolume(1);
@@ -323,7 +326,7 @@ public class VariableUtile {
 					height.bind(Bindings.selectDouble(mediaViewMelange.sceneProperty(), "height"));
 
 					int debut = 35 * (morceauJoue - 1);
-					System.out.println("début : " + debut);
+					System.out.println("dÃ©but : " + debut);
 					try {
 						playerVideoMelange.setStartTime(Duration.seconds(debut));
 					} catch (Exception e) {
@@ -337,8 +340,8 @@ public class VariableUtile {
 							playerVideoMelange.setStopTime(Duration.seconds(fin));
 							System.out.println("STOP");
 						} catch (Exception e) {
-							// Aller jusqu'à la fin
-							System.out.println("jusqu'à la fin");
+							// Aller jusqu'Ã  la fin
+							System.out.println("jusqu'Ã  la fin");
 						}
 					}
 
@@ -413,7 +416,7 @@ public class VariableUtile {
 		cacherMenuPrincipal();
 		afficherEcranSelection();
 
-		// Sélection de six danses
+		// SÃ©lection de six danses
 		dansesSelectionnees.clear();
 		ArrayList<Integer> musiquesDejaChoisiees = new ArrayList<Integer>();
 		for (int i = 0; i < 6; i++) {

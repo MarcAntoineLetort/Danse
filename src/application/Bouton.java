@@ -42,7 +42,7 @@ public class Bouton extends Parent {
 
 	public Bouton(double positionLargeur, double positionHauteur, double largeur, double hauteur, double taillePolice,
 			Danse danse, boolean modeSelection, int emplacement) {
-		// emplacement = numÈro d'ordre dans le tableau, 6 = bouton suggestion
+		// emplacement = num√©ro d'ordre dans le tableau, 6 = bouton suggestion
 		super();
 		this.danse = danse;
 		this.rectangle = new Rectangle(largeur, hauteur);
@@ -64,7 +64,7 @@ public class Bouton extends Parent {
 		imageViewBouton.setFitWidth(largeur * 0.86);
 		imageViewBouton.setFitHeight(largeur * 0.86);
 		this.emplacement = emplacement;
-		// TÈmoin intensitÈ
+		// T√©moin intensit√©
 		String intensite = null;
 		switch (danse.intensite) {
 		case 1:
@@ -90,7 +90,7 @@ public class Bouton extends Parent {
 			imageViewIntensite.setFitWidth(largeur * 0.06);
 			imageViewIntensite.setFitHeight(largeur * 0.06);
 		}
-		// TÈmoin technique
+		// T√©moin technique
 		String technique = null;
 		switch (danse.technique) {
 		case 1:
@@ -117,7 +117,7 @@ public class Bouton extends Parent {
 			imageViewTechnique.setFitHeight(largeur * 0.06);
 		}
 		if (danse.equals(VariableUtile.danseNeant)) {
-			this.text = new Text(positionLargeur, positionHauteur + 0.98 * hauteur, "NÈant");
+			this.text = new Text(positionLargeur, positionHauteur + 0.98 * hauteur, "N√©ant");
 		} else {
 			this.text = new Text(positionLargeur, positionHauteur + 0.98 * hauteur,
 					danse.titreMusique + (danse.artistes.size() > 0 ? " - " + danse.artistes.get(0) : ""));
@@ -151,7 +151,7 @@ public class Bouton extends Parent {
 				imageViewBouton.setImage(danse.imageDanse2);
 				VariableUtile.scene.setCursor(Cursor.HAND);
 
-				// Si pas dÈj‡ actif
+				// Si pas d√©j√† actif
 				if (VariableUtile.danseSelectionnee != danse) {
 
 					VariableUtile.couleur1 = danse.couleur1;
@@ -239,7 +239,7 @@ public class Bouton extends Parent {
 		this.cadre.setOnMousePressed(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
 				if (VariableUtile.modeSelection) {
-					// DÈplacement danse pour Èchange
+					// D√©placement danse pour √©change
 					VariableUtile.imageViewDanseEchangeSelection = new ImageView(danse.imageDanse2);
 					VariableUtile.imageViewDanseEchangeSelection.setFitWidth(largeur * 0.86);
 					VariableUtile.imageViewDanseEchangeSelection.setFitHeight(largeur * 0.86);
@@ -267,7 +267,7 @@ public class Bouton extends Parent {
 		this.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
 				if (!VariableUtile.modeSelection) {
-					// DÈmarrage de la vidÈo
+					// D√©marrage de la vid√©o
 					VariableUtile.lancerVideo(danse);
 				} else if (VariableUtile.imageViewDanseEchangeSelection != null) {
 					finirGlissementSelection();
@@ -279,10 +279,10 @@ public class Bouton extends Parent {
 			public void handle(MouseDragEvent event) {
 				finirGlissementSelection();
 
-				// Èchange de danse
+				// √©change de danse
 				Danse danceCible = danse;
 
-				// Mettre la danse sÈlectionnÈe dans le bouton cible
+				// Mettre la danse s√©lectionn√©e dans le bouton cible
 				VariableUtile.dansesSelectionnees.set(emplacement, VariableUtile.danseSelectionnee);
 				// Mettre la danse cible dans le bouton source
 				VariableUtile.dansesSelectionnees.set(VariableUtile.boutonGlissePourEchangeSelection.emplacement,
@@ -296,7 +296,7 @@ public class Bouton extends Parent {
 		this.cadre.setOnMouseDragged(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent event) {
 				if (VariableUtile.modeSelection && VariableUtile.imageViewDanseEchangeSelection != null) {
-					// image glisser-dÈposer
+					// image glisser-d√©poser
 					VariableUtile.imageViewDanseEchangeSelection.setX(MouseInfo.getPointerInfo().getLocation().getX()
 							- VariableUtile.imageViewDanseEchangeSelection.getFitWidth() / 2);
 					VariableUtile.imageViewDanseEchangeSelection.setY(MouseInfo.getPointerInfo().getLocation().getY()
@@ -317,7 +317,7 @@ public class Bouton extends Parent {
 			VariableUtile.root.getChildren().add(this);
 		});
 
-		// Bouton de changement alÈatoire de danse (mode sÈlection)
+		// Bouton de changement al√©atoire de danse (mode s√©lection)
 		if (modeSelection) {
 			changerDanseBouton = new Bouton(positionLargeur + (largeur * 3.9 / 5),
 					positionHauteur + (hauteur * 3.7 / 5), largeur / 5, hauteur / 5, 0, "Rejouer");
@@ -327,7 +327,7 @@ public class Bouton extends Parent {
 			changerDanseBouton.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 				public void handle(MouseEvent me) {
 					int aleaVideo;
-					// Compter les danses non vides dÈj‡ sÈlectionnÈes
+					// Compter les danses non vides d√©j√† s√©lectionn√©es
 					int nombreDansesSelectionnables = 0;
 					for (Danse danseSelectionnee : VariableUtile.dansesSelectionnees) {
 						if (!danseSelectionnee.equals(VariableUtile.danseNeant)

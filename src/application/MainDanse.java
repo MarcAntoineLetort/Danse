@@ -56,7 +56,7 @@ public class MainDanse extends Application {
 		VariableUtile.px = VariableUtile.largeurFenetre / 100;
 		VariableUtile.py = VariableUtile.hauteurFenetre / 100;
 
-		int alea = (int) (Math.random() * 4);
+		int alea = (int) (Math.random() * 6);
 		String imageChargementURI = null;
 		switch (alea) {
 		case 0:
@@ -71,13 +71,23 @@ public class MainDanse extends Application {
 			break;
 		case 2:
 			imageChargementURI = "imageBouton/chargement_6.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 0, 95);
-			VariableUtile.couleur2 = Color.rgb(30, 20, 0);
+			VariableUtile.couleur1 = Color.rgb(0, 0, 95);//Bleu foncÃ©
+			VariableUtile.couleur2 = Color.rgb(30, 20, 0);//Noir
 			break;
 		case 3:
 			imageChargementURI = "imageBouton/chargement_8.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 50, 90);
-			VariableUtile.couleur2 = Color.rgb(90, 90, 0);
+			VariableUtile.couleur1 = Color.rgb(0, 50, 90);//Bleu foncÃ©
+			VariableUtile.couleur2 = Color.rgb(90, 90, 0);//Vert kaki
+			break;
+		case 4:
+			imageChargementURI = "imageBouton/chargement_13_latino.png";
+			VariableUtile.couleur1 = Color.rgb(3, 183, 48);//Vert
+			VariableUtile.couleur2 = Color.rgb(253, 221, 42);//Jaune
+			break;
+		case 5:
+			imageChargementURI = "imageBouton/chargement_14_folk.png";
+			VariableUtile.couleur1 = Color.rgb(198, 92, 33);//Orange
+			VariableUtile.couleur2 = Color.rgb(26, 130, 67);//Vert
 			break;
 
 		default:
@@ -96,8 +106,8 @@ public class MainDanse extends Application {
 		imageChargement.setX((VariableUtile.largeurFenetre - imageChargement.getImage().getWidth()) / 2);
 		imageChargement.setY((VariableUtile.hauteurFenetre - imageChargement.getImage().getHeight()) / 2);
 		VariableUtile.root.getChildren().add(imageChargement);
-		
-		// Désactivation des interactions souris pendant le chargement
+
+		// DÃ©sactivation des interactions souris pendant le chargement
 		VariableUtile.root.setDisable(true);
 
 		Thread threadChargement = new Thread() {
@@ -112,7 +122,7 @@ public class MainDanse extends Application {
 			try {
 				threadChargement.join();
 				Platform.runLater(() -> {
-					// Réactivation des interactions souris
+					// RÃ©activation des interactions souris
 					VariableUtile.root.setDisable(false);
 					VariableUtile.root.getChildren().remove(imageChargement);
 				});
@@ -135,7 +145,7 @@ public class MainDanse extends Application {
 		VariableUtile.dansesFiltrees = new ArrayList<>();
 		VariableUtile.dansesSelectionnees = new ArrayList<>();
 
-		VariableUtile.danseNeant = new Danse("Néant", "Quitter", Color.BLACK, Color.WHITE);
+		VariableUtile.danseNeant = new Danse("NÃ©ant", "Quitter", Color.BLACK, Color.WHITE);
 
 		VariableUtile.artistes = new HashMap<Integer, String>();
 
@@ -148,8 +158,6 @@ public class MainDanse extends Application {
 		completerDanses();
 
 		// TODO ajouter le filtre version jd
-
-		// TODO A mettre plus fort : hey girl
 
 		genererBoutonsFinDeDanse();
 
@@ -285,7 +293,7 @@ public class MainDanse extends Application {
 			}
 		});
 		VariableUtile.boutonPrecedent = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Précédent");
+				VariableUtile.px * 7, 25, "PrÃ©cÃ©dent");
 
 		VariableUtile.boutonPrecedent.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -390,9 +398,9 @@ public class MainDanse extends Application {
 	}
 
 	private void genererBoutonMelange() {
-		// Mélange
+		// MÃ©lange
 		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Mélange");
+				VariableUtile.px * 7, 25, "MÃ©lange");
 		VariableUtile.boutonMelange.setVisible(true);
 		VariableUtile.boutonMelange.toFront();
 		VariableUtile.boutonMelange.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -403,10 +411,10 @@ public class MainDanse extends Application {
 	}
 
 	private void genererBoutonIllimite() {
-		// Illimité
+		// IllimitÃ©
 		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Illimite");
-		VariableUtile.boutonIllimite.text.setText("Illimité");
+		VariableUtile.boutonIllimite.text.setText("IllimitÃ©");
 		VariableUtile.boutonIllimite.setVisible(true);
 		VariableUtile.boutonIllimite.toFront();
 		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -418,10 +426,10 @@ public class MainDanse extends Application {
 	}
 
 	private void genererBoutonsSelection() {
-		// Sélection
+		// SÃ©lection
 		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Selection");
-		VariableUtile.boutonSelection.text.setText("Sélection");
+		VariableUtile.boutonSelection.text.setText("SÃ©lection");
 		VariableUtile.boutonSelection.setVisible(true);
 		VariableUtile.boutonSelection.toFront();
 		VariableUtile.boutonSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -498,11 +506,11 @@ public class MainDanse extends Application {
 		VariableUtile.boutonTriAleatoire = new Bouton(positiondebutX, VariableUtile.py * 17, largeurX,
 				VariableUtile.px * 10, 25, "Aleatoire");
 		VariableUtile.boutonTriAleatoire.etatValide = true;
-		VariableUtile.boutonTriAleatoire.finirGenerationBoutonTri("Aléatoire", Tri.Aleatoire);
+		VariableUtile.boutonTriAleatoire.finirGenerationBoutonTri("AlÃ©atoire", Tri.Aleatoire);
 
 		VariableUtile.boutonTriAlphabetique = new Bouton(positiondebutX + 1 * (largeurX + margeX),
 				VariableUtile.py * 17, largeurX, VariableUtile.px * 10, 25, "Alphabetique");
-		VariableUtile.boutonTriAlphabetique.finirGenerationBoutonTri("Alphabétique", Tri.Alphabetique);
+		VariableUtile.boutonTriAlphabetique.finirGenerationBoutonTri("AlphabÃ©tique", Tri.Alphabetique);
 
 		VariableUtile.boutonTriArtiste = new Bouton(positiondebutX + 2 * (largeurX + margeX), VariableUtile.py * 17,
 				largeurX, VariableUtile.px * 10, 25, "Artiste");
@@ -549,7 +557,7 @@ public class MainDanse extends Application {
 		});
 		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 81, VariableUtile.py * 85,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 20, "Rejouer");
-		VariableUtile.boutonFiltreReinitialiser.text.setText("Réinitialiser");
+		VariableUtile.boutonFiltreReinitialiser.text.setText("RÃ©initialiser");
 		VariableUtile.boutonFiltreReinitialiser.setVisible(false);
 		VariableUtile.boutonFiltreReinitialiser.toFront();
 		VariableUtile.boutonFiltreReinitialiser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -560,7 +568,7 @@ public class MainDanse extends Application {
 			}
 		});
 
-		VariableUtile.textFiltreIntensite = new Text(VariableUtile.px * 1, VariableUtile.py * 14, "Intensité");
+		VariableUtile.textFiltreIntensite = new Text(VariableUtile.px * 1, VariableUtile.py * 14, "IntensitÃ©");
 		VariableUtile.textFiltreIntensite.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
 		VariableUtile.textFiltreIntensite.setWrappingWidth(VariableUtile.px * 9);
 		VariableUtile.textFiltreIntensite.setTextAlignment(TextAlignment.CENTER);
@@ -578,7 +586,7 @@ public class MainDanse extends Application {
 
 		VariableUtile.boutonFiltreIntensiteModeree = new Bouton(VariableUtile.px * 2, VariableUtile.py * 37,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_moderee");
-		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("Modérée");
+		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("ModÃ©rÃ©e");
 
 		VariableUtile.boutonFiltreIntensiteIntense = new Bouton(VariableUtile.px * 2, VariableUtile.py * 57,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_intense");
@@ -602,13 +610,13 @@ public class MainDanse extends Application {
 
 		VariableUtile.boutonFiltreTechniqueModeree = new Bouton(VariableUtile.px * 11, VariableUtile.py * 37,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_moderee");
-		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("Modérée");
+		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("ModÃ©rÃ©e");
 
 		VariableUtile.boutonFiltreTechniqueIntense = new Bouton(VariableUtile.px * 11, VariableUtile.py * 57,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_elevee");
-		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("Elevée");
+		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("ElevÃ©e");
 
-		// Filtres genre -- Opacité paint.net 150
+		// Filtres genre -- OpacitÃ© paint.net 150
 		VariableUtile.texteFiltreGenre = new Text(VariableUtile.px * 35, VariableUtile.py * 14, "Genre");
 		VariableUtile.texteFiltreGenre.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
 		VariableUtile.texteFiltreGenre.setWrappingWidth(VariableUtile.px * 9);
@@ -657,7 +665,7 @@ public class MainDanse extends Application {
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Jazzy");
 		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
 
-		// Filtres nombre de danseurs -- Opacité paint.net 160
+		// Filtres nombre de danseurs -- OpacitÃ© paint.net 160
 		VariableUtile.texteFiltreNbDanseurs = new Text(VariableUtile.px * 61, VariableUtile.py * 14,
 				"Nombre de danseurs");
 		VariableUtile.texteFiltreNbDanseurs.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
@@ -777,7 +785,7 @@ public class MainDanse extends Application {
 		} catch (FileNotFoundException e) {
 			afficherErreur("Impossible d'ouvrir le fichier " + VariableUtile.fichierInfosDanses + " " + e);
 		} catch (Exception e) {
-			afficherErreur("Erreur pendant la récupération des infos danse ligne " + ordreAjout + " " + e);
+			afficherErreur("Erreur pendant la rÃ©cupÃ©ration des infos danse ligne " + ordreAjout + " " + e);
 			e.printStackTrace();
 		} finally {
 			scanner.close();
@@ -854,7 +862,7 @@ public class MainDanse extends Application {
 	}
 
 	public static void genererBoutonsDanse(boolean nettoyer, boolean modeSelection) {
-		// emplacement : mettre 7 par défaut
+		// emplacement : mettre 7 par dÃ©faut
 		if (nettoyer) {
 			for (Bouton bouton : VariableUtile.boutonsDanse) {
 				bouton.setVisible(false);
@@ -879,8 +887,12 @@ public class MainDanse extends Application {
 				double largeurPositionBouton = i > 2 ? VariableUtile.px * (i - 3) * 20 + VariableUtile.px * 15
 						: VariableUtile.px * i * 20 + VariableUtile.px * 15;
 				double hauteurPositionBouton = i > 2 ? VariableUtile.py * 60 : VariableUtile.py * 22;
+				Danse danse = dansesAafficher.get(numeroDanse);
+				if (danse.imageDanse1 == null) {
+					danse.importerImages();
+				}
 				Bouton boutonDanse = new Bouton(largeurPositionBouton, hauteurPositionBouton, VariableUtile.px * 17,
-						VariableUtile.py * 33, 20, dansesAafficher.get(numeroDanse), modeSelection ? true : false, i);
+						VariableUtile.py * 33, 20, danse, modeSelection ? true : false, i);
 
 				VariableUtile.boutonsDanse.add(boutonDanse);
 
@@ -988,8 +1000,8 @@ public class MainDanse extends Application {
 	}
 
 	public static boolean sauterDansesVides() {
-		// Attention VariableUtile.numeroProchaineDanseSelection est modifié
-		// dans la méthode
+		// Attention VariableUtile.numeroProchaineDanseSelection est modifiÃ©
+		// dans la mÃ©thode
 		boolean tousVides = false;
 		while (VariableUtile.numeroProchaineDanseSelection < 6 && VariableUtile.dansesSelectionnees
 				.get(VariableUtile.numeroProchaineDanseSelection).equals(VariableUtile.danseNeant)) {
@@ -1013,7 +1025,7 @@ public class MainDanse extends Application {
 		try {
 			return new Image(imageURL.toExternalForm());
 		} catch (Exception e) {
-			afficherErreur("Image non trouvée : " + imageURI);
+			afficherErreur("Image non trouvÃ©e : " + imageURI);
 		}
 		return null;
 	}
