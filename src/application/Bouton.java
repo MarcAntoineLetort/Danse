@@ -26,6 +26,8 @@ public class Bouton extends Parent {
 	Rectangle cadre;
 	ImageView imageViewBouton;
 	ImageView imageViewIntensite;
+	Image imageBouton1;
+	Image imageBouton2;
 	Circle fondIntensite;
 	ImageView imageViewTechnique;
 	Circle fondTechnique;
@@ -380,10 +382,18 @@ public class Bouton extends Parent {
 		cadre.setArcHeight(hauteur * 0.25);
 		cadre.setOpacity(0);
 
-		Image imageBouton1 = VariableUtile.main.importerImage("imageBouton/" + texte + "1.png");
-		Image imageBouton2 = VariableUtile.main.importerImage("imageBouton/" + texte + "2.png");
+		this.imageViewBouton = new ImageView();
 
-		this.imageViewBouton = new ImageView(imageBouton1);
+		Thread threadChargement = new Thread() {
+			public void run() {
+				imageBouton1 = VariableUtile.main.importerImage("imageBouton/" + texte + "1.png");
+				imageBouton2 = VariableUtile.main.importerImage("imageBouton/" + texte + "2.png");
+
+				imageViewBouton.setImage(imageBouton1);
+			}
+		};
+		threadChargement.start();
+
 		imageViewBouton.setX(positionLargeur + 0.07 * largeur);
 		imageViewBouton.setY(positionHauteur + 0.07 * largeur);
 		imageViewBouton.setFitWidth(largeur * 0.86);
@@ -407,13 +417,17 @@ public class Bouton extends Parent {
 
 		this.cadre.setOnMouseEntered(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				imageViewBouton.setImage(imageBouton2);
+				if (imageBouton2 != null) {
+					imageViewBouton.setImage(imageBouton2);
+				}
 				VariableUtile.scene.setCursor(Cursor.HAND);
 			}
 		});
 		this.cadre.setOnMouseExited(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				imageViewBouton.setImage(imageBouton1);
+				if (imageBouton1 != null) {
+					imageViewBouton.setImage(imageBouton1);
+				}
 				if (!VariableUtile.videoEnCours) {
 					VariableUtile.scene.setCursor(Cursor.DEFAULT);
 				}

@@ -71,23 +71,23 @@ public class MainDanse extends Application {
 			break;
 		case 2:
 			imageChargementURI = "imageBouton/chargement_6.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 0, 95);//Bleu foncé
-			VariableUtile.couleur2 = Color.rgb(30, 20, 0);//Noir
+			VariableUtile.couleur1 = Color.rgb(0, 0, 95);// Bleu foncé
+			VariableUtile.couleur2 = Color.rgb(30, 20, 0);// Noir
 			break;
 		case 3:
 			imageChargementURI = "imageBouton/chargement_8.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 50, 90);//Bleu foncé
-			VariableUtile.couleur2 = Color.rgb(90, 90, 0);//Vert kaki
+			VariableUtile.couleur1 = Color.rgb(0, 50, 90);// Bleu foncé
+			VariableUtile.couleur2 = Color.rgb(90, 90, 0);// Vert kaki
 			break;
 		case 4:
 			imageChargementURI = "imageBouton/chargement_13_latino.png";
-			VariableUtile.couleur1 = Color.rgb(3, 183, 48);//Vert
-			VariableUtile.couleur2 = Color.rgb(253, 221, 42);//Jaune
+			VariableUtile.couleur1 = Color.rgb(3, 183, 48);// Vert
+			VariableUtile.couleur2 = Color.rgb(253, 221, 42);// Jaune
 			break;
 		case 5:
 			imageChargementURI = "imageBouton/chargement_14_folk.png";
-			VariableUtile.couleur1 = Color.rgb(198, 92, 33);//Orange
-			VariableUtile.couleur2 = Color.rgb(26, 130, 67);//Vert
+			VariableUtile.couleur1 = Color.rgb(198, 92, 33);// Orange
+			VariableUtile.couleur2 = Color.rgb(26, 130, 67);// Vert
 			break;
 
 		default:
@@ -889,12 +889,19 @@ public class MainDanse extends Application {
 						: VariableUtile.px * i * 20 + VariableUtile.px * 15;
 				double hauteurPositionBouton = i > 2 ? VariableUtile.py * 60 : VariableUtile.py * 22;
 				Danse danse = dansesAafficher.get(numeroDanse);
-				if (danse.imageDanse1 == null) {
-					danse.importerImages();
-				}
 				Bouton boutonDanse = new Bouton(largeurPositionBouton, hauteurPositionBouton, VariableUtile.px * 17,
 						VariableUtile.py * 33, 20, danse, modeSelection ? true : false, i);
-				if(!visible){
+				if (danse.imageDanse1 == null) {
+					Thread threadChargement = new Thread() {
+						public void run() {
+							danse.importerImages();
+							boutonDanse.imageViewBouton.setImage(danse.imageDanse1);
+						}
+					};
+					threadChargement.start();
+				}
+				
+				if (!visible) {
 					boutonDanse.setVisible(false);
 				}
 
