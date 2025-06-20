@@ -38,6 +38,7 @@ public class Bouton extends Parent {
 	Bouton changerDanseBouton;
 	int emplacement;
 
+	//Bouton danse et suggestion
 	public Bouton(double positionLargeur, double positionHauteur, double largeur, double hauteur, double taillePolice,
 			Danse danse, boolean modeSelection, int emplacement) {
 		// emplacement = numéro d'ordre dans le tableau, 6 = bouton suggestion
@@ -124,12 +125,15 @@ public class Bouton extends Parent {
 		adapterTaillePolice(taillePolice, largeur);
 		text.setWrappingWidth(largeur);
 		text.setTextAlignment(TextAlignment.CENTER);
-		text.setFill(danse.couleur1.brighter().brighter().brighter().brighter());
-		effetText = new DropShadow();
-		effetText.setColor(danse.couleur1.invert());
-		effetText.setRadius(50);
-		effetText.setSpread(0.8);
-		text.setEffect(effetText);
+		text.setFill(VariableUtile.couleurInverse(danse.couleur2.darker().darker()));
+		
+//		DropShadow ombreTexte = new DropShadow();
+//		ombreTexte.setRadius(3);
+//		ombreTexte.setOffsetX(0);
+//		ombreTexte.setOffsetY(1);
+//		ombreTexte.setColor(VariableUtile.couleurInverse(danse.couleur1));
+//
+//		text.setEffect(ombreTexte);
 
 		this.getChildren().add(rectangle);
 		this.getChildren().add(cadre);
@@ -353,6 +357,7 @@ public class Bouton extends Parent {
 
 	}
 
+	//Tous les boutons non danse
 	public Bouton(double positionLargeur, double positionHauteur, double largeur, double hauteur, double taillePolice,
 			String texte) {
 		super();

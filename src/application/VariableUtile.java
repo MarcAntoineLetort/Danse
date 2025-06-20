@@ -199,7 +199,7 @@ public class VariableUtile {
 
 		VariableUtile.lecteurVLCJ.imageView.setVisible(true);
 		VariableUtile.lecteurVLCJ.demarrer(videoDanse);
-		
+
 		PauseTransition pause = new PauseTransition(Duration.seconds(120));
 		pause.setOnFinished(e -> mouvSourisVsVeuille());
 		pause.play();
@@ -236,17 +236,17 @@ public class VariableUtile {
 			}
 		}
 	}
-	
+
 	public static void mouvSourisVsVeuille() {
 		// Mouvement de souris pour empécher la veille
-				Robot hal = null;
-				try {
-					hal = new Robot();
-				} catch (Exception e) {
-					MainDanse.afficherErreur("Echec de la génération du robot de mouvement de souris : " + e);
-				}
-				hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
-						(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
+		Robot hal = null;
+		try {
+			hal = new Robot();
+		} catch (Exception e) {
+			MainDanse.afficherErreur("Echec de la génération du robot de mouvement de souris : " + e);
+		}
+		hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
+				(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
 	}
 
 	public static void quitterPleinEcran() {
@@ -409,7 +409,7 @@ public class VariableUtile {
 		afficherMenuPrincipal();
 
 		VariableUtile.videoEnCours = false;
-		
+
 		VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
 		primaryStage.setFullScreen(false);
 	}
@@ -572,5 +572,20 @@ public class VariableUtile {
 		} else {
 			finSelection();
 		}
+	}
+
+	public static Color couleurInverse(Color base) {
+		Color inverseAvecLuminosite;
+
+		double luminosite = 0.2126 * base.getRed() + 0.7152 * base.getGreen() + 0.0722 * base.getBlue();
+
+		Color inverse = base.invert();
+
+		if (luminosite > 0.5) {
+			inverseAvecLuminosite = inverse.darker().deriveColor(0, 1, 1, 1);
+		} else {
+			inverseAvecLuminosite = inverse.brighter().deriveColor(0, 1, 1, 1);
+		}
+		return inverseAvecLuminosite;
 	}
 }
