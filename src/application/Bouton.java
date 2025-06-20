@@ -2,9 +2,6 @@ package application;
 
 import java.awt.MouseInfo;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
@@ -19,7 +16,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
-import javafx.util.Duration;
 
 public class Bouton extends Parent {
 	Rectangle rectangle;
@@ -125,6 +121,7 @@ public class Bouton extends Parent {
 					danse.titreMusique + (danse.artistes.size() > 0 ? " - " + danse.artistes.get(0) : ""));
 		}
 		text.setFont(new Font(VariableUtile.police, taillePolice));
+		adapterTaillePolice(taillePolice, largeur);
 		text.setWrappingWidth(largeur);
 		text.setTextAlignment(TextAlignment.CENTER);
 		text.setFill(danse.couleur1.brighter().brighter().brighter().brighter());
@@ -191,41 +188,24 @@ public class Bouton extends Parent {
 					VariableUtile.genererTextPage();
 
 					// Son
-					// if (VariableUtile.playerVideo != null) {
-					// KeyValue keyValueVolume = new
-					// KeyValue(VariableUtile.playerVideo.volumeProperty(), 0);
-					// KeyFrame keyFrameMusique = new
-					// KeyFrame(Duration.seconds(0.5), keyValueVolume);
-					// Timeline timelineMusique = new Timeline();
-					// timelineMusique.getKeyFrames().addAll(keyFrameMusique);
-					//
-					// timelineMusique.play();
-					// }
-					// new java.util.Timer().schedule(new java.util.TimerTask()
-					// {
-					// @Override
-					// public void run() {
-					if (VariableUtile.playerVideo != null) {
-						VariableUtile.playerVideo.stop();
-						VariableUtile.playerVideo.dispose();
+					if (VariableUtile.lecteurAudio != null) {
+						VariableUtile.lecteurAudio.arreter();
 					}
 					if (!danse.equals(VariableUtile.danseNeant)) {
 						VariableUtile.lancerSon(danse);
-						VariableUtile.playerVideo.setVolume(0);
-						VariableUtile.playerVideo.setStartTime(Duration.seconds(20));
+						VariableUtile.lecteurAudio.volume(50);
+						VariableUtile.lecteurAudio.definirTempsDepart(20);
 
-						KeyValue keyValueVolume = new KeyValue(VariableUtile.playerVideo.volumeProperty(), 0.3);
-						KeyFrame keyFrameMusique = new KeyFrame(Duration.seconds(3), keyValueVolume);
-						Timeline timelineMusique = new Timeline();
-						timelineMusique.getKeyFrames().addAll(keyFrameMusique);
+//						Timeline timelineMusique = new Timeline();
+//						KeyValue keyValueVolume = new KeyValue(VariableUtile.lecteurAudio.volumeProperty(), 0.3);
+//						KeyFrame keyFrameMusique = new KeyFrame(Duration.seconds(1), keyValueVolume);
+//						timelineMusique.getKeyFrames().add(keyFrameMusique);
+//						timelineMusique.play();
 
-						timelineMusique.play();
 						Platform.runLater(() -> {
-							VariableUtile.playerVideo.play();
+							VariableUtile.lecteurAudio.demarrer();
 						});
 					}
-					// }
-					// }, 500);
 				}
 			}
 		});
@@ -356,6 +336,14 @@ public class Bouton extends Parent {
 		}
 	}
 
+	private void adapterTaillePolice(double taillePolice, double largeur) {
+		double taillePoliceDynamique = taillePolice;
+		while (text.getLayoutBounds().getWidth() > largeur && taillePoliceDynamique > 5) {
+			taillePoliceDynamique -= 0.5;
+			text.setFont(Font.font(taillePoliceDynamique));
+        }
+	}
+
 	public static void finirGlissementSelection() {
 		VariableUtile.root.getChildren().remove(VariableUtile.imageViewDanseEchangeSelection);
 		VariableUtile.imageViewDanseEchangeSelection.setVisible(false);
@@ -400,6 +388,7 @@ public class Bouton extends Parent {
 		imageViewBouton.setFitHeight(largeur * 0.86);
 		this.text = new Text(positionLargeur, positionHauteur + 0.85 * hauteur, texte);
 		text.setFont(new Font(VariableUtile.police, taillePolice));
+		adapterTaillePolice(taillePolice, largeur);
 		text.setWrappingWidth(largeur);
 		text.setTextAlignment(TextAlignment.CENTER);
 		text.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
@@ -408,11 +397,12 @@ public class Bouton extends Parent {
 		effetText.setRadius(50);
 		effetText.setSpread(0.8);
 		text.setEffect(effetText);
+		text.setMouseTransparent(true);
 
 		this.getChildren().add(rectangle);
-		this.getChildren().add(cadre);
 		this.getChildren().add(imageViewBouton);
 		this.getChildren().add(text);
+		this.getChildren().add(cadre);
 		cadre.toFront();
 
 		this.cadre.setOnMouseEntered(new EventHandler<MouseEvent>() {

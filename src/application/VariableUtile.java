@@ -1,21 +1,18 @@
 package application;
 
-import java.awt.AWTException;
 import java.awt.MouseInfo;
-import java.awt.Robot;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -24,6 +21,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.RadialGradient;
+import javafx.scene.robot.Robot;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -51,8 +49,8 @@ public class VariableUtile {
 	public static ArrayList<Text> textesFiltres = new ArrayList<>();
 	public static ArrayList<Text> textes = new ArrayList<>();
 	public static ArrayList<Node> elementAAfficher = new ArrayList<>();
-	public static MediaPlayer playerVideo;
-	public static MediaView mediaView;
+	public static LecteurVLCJ lecteurVLCJ;
+	public static LecteurAudioVLC lecteurAudio;
 	public static RadialGradient shadePaint;
 	public static Scene scene;
 	public static BorderPane root;
@@ -117,13 +115,13 @@ public class VariableUtile {
 	public static boolean modeFiltre = false;
 	public static boolean modeTri = false;
 	public static int numeroProchaineDanseSelection = 0;
+	public static int volumeRecommande = 100;
 	public static ImageView imageViewDanseEchangeSelection;
 	public static Bouton boutonGlissePourEchangeSelection;
 	public static ArrayList<MediaView> mediaViewsMelange;
 	public static ArrayList<MediaPlayer> playerVideosMelange;
 	public static ArrayList<Danse> dansesSelectionnees;
 	public static String police = "Arial Rounded MT Bold"; // Constantia
-	// public static TextField barreRecherche;
 	public static BarreRecherche barreRecherche;
 
 	public static Text textCompteur;
@@ -139,21 +137,26 @@ public class VariableUtile {
 
 	public static void genererBoutonSuggestion(boolean nettoyerPrecedant) {
 		if (nettoyerPrecedant) {
-			VariableUtile.boutonsMenu.remove(boutonSuggestion);
+			boutonsMenu.remove(boutonSuggestion);
 			Platform.runLater(() -> {
-				VariableUtile.root.getChildren().remove(VariableUtile.boutonSuggestion);
+				if (boutonSuggestion != null) {
+					boutonSuggestion.setVisible(false);
+					root.getChildren().remove(boutonSuggestion);
+				}
 			});
 		}
 		if (dansesFiltrees.size() > 0) {
-			int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
 			Platform.runLater(() -> {
-				Danse danse = dansesFiltrees.get(aleaSuggestion - 1);
-				if (danse.imageDanse1 == null) {
-					danse.importerImages();
+				if (dansesFiltrees.size() > 0) {
+					int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
+					Danse danse = dansesFiltrees.get(aleaSuggestion - 1);
+					if (danse.imageDanse1 == null) {
+						danse.importerImages();
+					}
+					boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, danse, false, 6);
+					boutonSuggestion.genererSuperTitre("Suggestion");
+					boutonsMenu.add(boutonSuggestion);
 				}
-				boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, danse, false, 6);
-				boutonSuggestion.genererSuperTitre("Suggestion");
-				VariableUtile.boutonsMenu.add(boutonSuggestion);
 			});
 		}
 	}
@@ -165,8 +168,8 @@ public class VariableUtile {
 
 	public static void lancerSon(Danse danse) {
 		try {
-			VariableUtile.playerVideo = new MediaPlayer(new Media(
-					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
+			String cheminComplet = new File(dossierDanses + "\\" + danse.nomVideo).getAbsolutePath();
+			lecteurAudio.chargerMedia(cheminComplet);
 		} catch (Exception e) {
 			MainDanse.afficherErreur(
 					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
@@ -174,85 +177,82 @@ public class VariableUtile {
 	}
 
 	public static void lancerVideo(Danse danse) {
-		if (VariableUtile.playerVideo != null) {
-			VariableUtile.playerVideo.stop();
-			VariableUtile.playerVideo.dispose();
-		}
+		VariableUtile.lecteurVLCJ.arreter();
 
-		// Démarrage de la vidéo
-		try {
-			VariableUtile.playerVideo = new MediaPlayer(new Media(
-					new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo).toURI().toURL().toExternalForm()));
+		File videoDanse = new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo);
 
-			VariableUtile.playerVideo.setOnReady(() -> {
-				VariableUtile.mediaView = new MediaView(VariableUtile.playerVideo);
-				// Platform.runLater(() -> {
-				VariableUtile.root.getChildren().add(VariableUtile.mediaView);
-				// });
+		// Retirer l'ancienne vue si elle existe
+		VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ.imageView);
 
-				VariableUtile.playerVideo.setVolume(1);
+		// Ajouter la nouvelle vue
+		VariableUtile.lecteurVLCJ.estEnPleinEcran = true;
+		VariableUtile.primaryStage.setFullScreen(true);
+		VariableUtile.lecteurVLCJ.imageView.fitWidthProperty().bind(VariableUtile.scene.widthProperty());
+		VariableUtile.lecteurVLCJ.imageView.fitHeightProperty().bind(VariableUtile.scene.heightProperty());
+		Platform.runLater(() -> VariableUtile.root.getChildren().add(VariableUtile.lecteurVLCJ.imageView));
 
-				final DoubleProperty width = VariableUtile.mediaView.fitWidthProperty();
-				final DoubleProperty height = VariableUtile.mediaView.fitHeightProperty();
-
-				width.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "width"));
-				height.bind(Bindings.selectDouble(VariableUtile.mediaView.sceneProperty(), "height"));
-
-				VariableUtile.primaryStage.setFullScreen(true);
-
-				Platform.runLater(() -> {
-					VariableUtile.playerVideo.play();
-				});
+		VariableUtile.lecteurVLCJ.setOnVideoFinished(() -> {
+			Platform.runLater(() -> {
+				actionVideoTerminee();
 			});
+		});
 
-		} catch (Exception e) {
-			MainDanse.afficherErreur(
-					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
-		}
+		VariableUtile.lecteurVLCJ.imageView.setVisible(true);
+		VariableUtile.lecteurVLCJ.demarrer(videoDanse);
+		
+		PauseTransition pause = new PauseTransition(Duration.seconds(120));
+		pause.setOnFinished(e -> mouvSourisVsVeuille());
+		pause.play();
 
 		cacherMenuPrincipal();
-		afficherBarreAction();
-		if (VariableUtile.modeSelection) {
+//		afficherBarreAction();
+		if (VariableUtile.modeSelection)
 			cacherEcranSelection();
-		}
 
 		VariableUtile.videoEnCours = true;
 		VariableUtile.scene.setCursor(Cursor.NONE);
+	}
 
-		VariableUtile.playerVideo.setOnEndOfMedia(() -> {
+	private static void actionVideoTerminee() {
+		mouvSourisVsVeuille();
 
-			// Mouvement de souris pour empécher la veille
-			Robot hal = null;
-			try {
-				hal = new Robot();
-			} catch (AWTException e) {
-				Alert a = new Alert(AlertType.ERROR);
-				a.setContentText("Echec de la génération du robot de mouvement de souris : " + e);
-				a.show();
-			}
-			hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
-					(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
-
-			if (VariableUtile.modeIllimite) {
-				Platform.runLater(() -> {
-					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-					VariableUtile.lancerVideoAuHasard();
-				});
-			}
-			if (VariableUtile.modeSelection) {
-				// Platform.runLater(() -> {
-				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-				// });
-				numeroProchaineDanseSelection++;
-				if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
-					if (MainDanse.sauterDansesVides()) {
-						VariableUtile.lancerVideo(dansesSelectionnees.get(numeroProchaineDanseSelection));
-					}
-				} else {
-					finSelection();
+//		if (VariableUtile.modeIllimite) {
+//			Platform.runLater(() -> {
+//				VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ);
+//				VariableUtile.lancerVideoAuHasard();
+//			});
+//		}
+		if (VariableUtile.modeSelection) {
+			// Platform.runLater(() -> {
+//			VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+			// });
+			numeroProchaineDanseSelection++;
+			if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
+				if (MainDanse.sauterDansesVides()) {
+					VariableUtile.lancerVideo(dansesSelectionnees.get(numeroProchaineDanseSelection));
 				}
+			} else {
+				finSelection();
 			}
-		});
+		}
+	}
+	
+	public static void mouvSourisVsVeuille() {
+		// Mouvement de souris pour empécher la veille
+				Robot hal = null;
+				try {
+					hal = new Robot();
+				} catch (Exception e) {
+					MainDanse.afficherErreur("Echec de la génération du robot de mouvement de souris : " + e);
+				}
+				hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
+						(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
+	}
+
+	public static void quitterPleinEcran() {
+		VariableUtile.root.setCenter(VariableUtile.root);
+		VariableUtile.scene.setCursor(Cursor.DEFAULT);
+		VariableUtile.videoEnCours = false;
 	}
 
 	public static void lancerVideoAuHasard() {
@@ -262,8 +262,8 @@ public class VariableUtile {
 
 	public static void lancerMelange() {
 		// Arrêt de la musique
-		if (VariableUtile.playerVideo != null) {
-			VariableUtile.playerVideo.stop();
+		if (VariableUtile.lecteurAudio != null) {
+			VariableUtile.lecteurAudio.arreter();
 		}
 		VariableUtile.modeMelange = true;
 
@@ -299,6 +299,7 @@ public class VariableUtile {
 				VariableUtile.root.getChildren().add(mediaViewMelange);
 			});
 			mediaViewMelange.setVisible(false);
+			VariableUtile.lecteurVLCJ.estEnPleinEcran = true;
 			VariableUtile.primaryStage.setFullScreen(true);
 			VariableUtile.mediaViewsMelange.add(mediaViewMelange);
 			VariableUtile.playerVideosMelange.add(playerVideoMelange);
@@ -365,6 +366,7 @@ public class VariableUtile {
 							VariableUtile.scene.setCursor(Cursor.DEFAULT);
 							VariableUtile.cacherBarreAction();
 							VariableUtile.afficherMenuPrincipal();
+							VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
 							VariableUtile.primaryStage.setFullScreen(false);
 						}
 					});
@@ -374,14 +376,14 @@ public class VariableUtile {
 	}
 
 	public static void rembobinerVideo(int nbSecondes) {
-		Duration currentTime = VariableUtile.playerVideo.getCurrentTime();
-		Duration newTime = currentTime.subtract(Duration.seconds(nbSecondes));
+		long tempsActuel = VariableUtile.lecteurVLCJ.tempsActuelMillis();
+		long nouveauTemps = tempsActuel - (nbSecondes * 1000L);
 
-		if (newTime.lessThan(Duration.ZERO)) {
-			newTime = Duration.ZERO;
+		if (nouveauTemps < 0) {
+			nouveauTemps = 0;
 		}
 
-		VariableUtile.playerVideo.seek(newTime);
+		VariableUtile.lecteurVLCJ.lancerAuTemps(nouveauTemps);
 	}
 
 	public static void stoperMelange() {
@@ -407,7 +409,8 @@ public class VariableUtile {
 		afficherMenuPrincipal();
 
 		VariableUtile.videoEnCours = false;
-
+		
+		VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
 		primaryStage.setFullScreen(false);
 	}
 
@@ -502,6 +505,7 @@ public class VariableUtile {
 		for (Bouton boutonAction : VariableUtile.boutonsAction) {
 			if (VariableUtile.modeIllimite || !boutonAction.text.getText().equals("Passer")) {
 				boutonAction.setVisible(true);
+				boutonAction.toFront();
 			}
 		}
 	}
@@ -549,11 +553,12 @@ public class VariableUtile {
 
 	public static void quitterDanse() {
 		if (!VariableUtile.modeMelange) {
-			VariableUtile.playerVideo.stop();
-			VariableUtile.mediaView.setVisible(false);
-			Platform.runLater(() -> {
-				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-			});
+			VariableUtile.lecteurVLCJ.arreter();
+			VariableUtile.lecteurVLCJ.imageView.setVisible(false);
+//			VariableUtile.mediaView.setVisible(false);
+//			Platform.runLater(() -> {
+//				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+//			});
 		} else {
 			VariableUtile.modeMelange = false;
 			VariableUtile.stoperMelange();

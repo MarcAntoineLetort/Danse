@@ -3,9 +3,11 @@ package application;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,7 +42,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class MainDanse extends Application {
-	Media soundDecompte;
+	Media sonDecompte;
 	MediaPlayer mediaPlayerCompteur;
 	ImageView imageChargement;
 
@@ -50,7 +52,7 @@ public class MainDanse extends Application {
 		VariableUtile.root = new BorderPane();
 		VariableUtile.main = this;
 		VariableUtile.largeurFenetre = Screen.getPrimary().getVisualBounds().getWidth();
-		VariableUtile.hauteurFenetre = Screen.getPrimary().getVisualBounds().getHeight() - 33;
+		VariableUtile.hauteurFenetre = Screen.getPrimary().getVisualBounds().getHeight();
 		VariableUtile.scene = new Scene(VariableUtile.root, VariableUtile.largeurFenetre, VariableUtile.hauteurFenetre);
 		VariableUtile.primaryStage.setMaximized(true);
 		VariableUtile.px = VariableUtile.largeurFenetre / 100;
@@ -121,12 +123,15 @@ public class MainDanse extends Application {
 		new Thread(() -> {
 			try {
 				threadChargement.join();
+
 				Platform.runLater(() -> {
 					// Réactivation des interactions souris
 					VariableUtile.root.setDisable(false);
 					VariableUtile.root.getChildren().remove(imageChargement);
+
 					validerFiltre();
 					Platform.runLater(() -> {
+
 						VariableUtile.textCompteur.toFront();
 						if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
 							VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
@@ -137,27 +142,49 @@ public class MainDanse extends Application {
 					});
 				});
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				MainDanse.afficherErreur("Erreur de fin de chargement : " + e.getMessage());
 			}
 		}).start();
 
 	}
 
-	private void chargerJeu() {
-		try {
-			soundDecompte = new Media(MainDanse.class.getResource("/application/selection1.mp3").toURI().toString());
-		} catch (URISyntaxException e) {
-			afficherErreur("Son /application/selection1.mp3 introuvable " + e);
+	public static Media mediaDepuisRessource(String chemin) throws IOException {
+		try (InputStream in = MainDanse.class.getResourceAsStream(chemin)) {
+			if (in == null)
+				throw new IOException("Ressource introuvable : " + chemin);
+
+			File tempFile = File.createTempFile("tempMedia", ".mp3");
+			tempFile.deleteOnExit();
+			Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+			return new Media(tempFile.toURI().toString());
 		}
-		mediaPlayerCompteur = new MediaPlayer(soundDecompte);
+	}
 
-		VariableUtile.danses = new HashMap<String, Danse>();
-		VariableUtile.dansesFiltrees = new ArrayList<>();
-		VariableUtile.dansesSelectionnees = new ArrayList<>();
+	private void chargerJeu() {
 
-		VariableUtile.danseNeant = new Danse("Néant", "Quitter", Color.BLACK, Color.WHITE);
+		try {
+			sonDecompte = mediaDepuisRessource("/application/selection1.mp3");
+			mediaPlayerCompteur = new MediaPlayer(sonDecompte);
 
-		VariableUtile.artistes = new HashMap<Integer, String>();
+		} catch (Exception e) {
+			MainDanse.afficherErreur("Erreur chargement MP3 : " + e.getMessage());
+		}
+
+		try {
+			VariableUtile.lecteurVLCJ = new LecteurVLCJ();
+			VariableUtile.lecteurAudio = new LecteurAudioVLC();
+
+			VariableUtile.danses = new HashMap<String, Danse>();
+			VariableUtile.dansesFiltrees = new ArrayList<>();
+			VariableUtile.dansesSelectionnees = new ArrayList<>();
+
+			VariableUtile.danseNeant = new Danse("Néant", "Quitter", Color.BLACK, Color.WHITE);
+
+			VariableUtile.artistes = new HashMap<Integer, String>();
+		} catch (Exception e) {
+			MainDanse.afficherErreur("Erreur d'initialisation : " + e);
+		}
 
 		importerConfig();
 
@@ -218,6 +245,7 @@ public class MainDanse extends Application {
 		VariableUtile.effetTextPage.setRadius(50);
 		VariableUtile.effetTextPage.setSpread(0.8);
 		VariableUtile.textPage.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.textPage.setMouseTransparent(true);
 
 		VariableUtile.textCompteur = new Text(VariableUtile.px * 0, VariableUtile.py * 65, "");
 		VariableUtile.textCompteur.setFont(new Font(VariableUtile.police, VariableUtile.py * 55));
@@ -239,20 +267,19 @@ public class MainDanse extends Application {
 
 		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent ke) {
-				if (VariableUtile.videoEnCours) {
+				if (VariableUtile.lecteurVLCJ.estEnLecture() || VariableUtile.lecteurVLCJ.estEnPleinEcran) {
 					if (ke.getCode().equals(KeyCode.ESCAPE)) {
+						VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
 						VariableUtile.scene.setCursor(Cursor.DEFAULT);
 						VariableUtile.videoEnCours = false;
-						VariableUtile.boutonQuitter.toFront();
-						VariableUtile.boutonRejouer.toFront();
-						VariableUtile.boutonPasser.toFront();
+						VariableUtile.afficherBarreAction();
 					} else if (ke.getCode().equals(KeyCode.SPACE)) {
-						if (VariableUtile.playerVideo != null) {
-							if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PAUSED) {
+						if (VariableUtile.lecteurVLCJ != null) {
+							if (VariableUtile.lecteurVLCJ.estEnPause()) {
 								VariableUtile.rembobinerVideo(3);
-								VariableUtile.playerVideo.play();
-							} else if (VariableUtile.playerVideo.getStatus() == MediaPlayer.Status.PLAYING) {
-								VariableUtile.playerVideo.pause();
+								VariableUtile.lecteurVLCJ.demarrer(null);
+							} else if (VariableUtile.lecteurVLCJ.estEnLecture()) {
+								VariableUtile.lecteurVLCJ.pause();
 							}
 						}
 					}
@@ -324,10 +351,11 @@ public class MainDanse extends Application {
 		VariableUtile.boutonRejouer.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
 				if (!VariableUtile.modeMelange) {
-					VariableUtile.playerVideo.stop();
-					VariableUtile.playerVideo.seek(Duration.ZERO);
-					VariableUtile.mediaView.setVisible(false);
+					VariableUtile.lecteurVLCJ.arreter();
+					VariableUtile.lecteurVLCJ.lancerAuTemps(0);
+					VariableUtile.lecteurVLCJ.imageView.setVisible(false);
 
+					VariableUtile.lecteurVLCJ.estEnPleinEcran = true;
 					VariableUtile.primaryStage.setFullScreen(true);
 					VariableUtile.cacherMenuPrincipal();
 					VariableUtile.cacherBarreAction();
@@ -366,12 +394,12 @@ public class MainDanse extends Application {
 						@Override
 						public void run() {
 							Platform.runLater(() -> {
-								VariableUtile.playerVideo.play();
+								VariableUtile.lecteurVLCJ.demarrer(null);
 
 								finirDecompte();
-								VariableUtile.afficherBarreAction();
-								VariableUtile.mediaView.setVisible(true);
-								VariableUtile.mediaView.toFront();
+//								VariableUtile.afficherBarreAction();
+								VariableUtile.lecteurVLCJ.imageView.setVisible(true);
+//								VariableUtile.lecteurVLCJ.imageView.toFront();
 								VariableUtile.scene.setCursor(Cursor.NONE);
 							});
 						}
@@ -388,11 +416,11 @@ public class MainDanse extends Application {
 		VariableUtile.boutonPasser.setVisible(false);
 		VariableUtile.boutonPasser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
-				VariableUtile.playerVideo.stop();
-				VariableUtile.mediaView.setVisible(false);
-				Platform.runLater(() -> {
-					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-				});
+				VariableUtile.lecteurVLCJ.arreter();
+//				VariableUtile.mediaView.setVisible(false);
+//				Platform.runLater(() -> {
+//					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
+//				});
 				VariableUtile.lancerVideoAuHasard();
 			}
 		});
@@ -794,8 +822,24 @@ public class MainDanse extends Application {
 	}
 
 	private void importerConfig() {
-		File fichierConfig = new File("Config.txt");
+		String nomFichierConfig = "Config.txt";
 		try {
+			// Tente de localiser le fichier via la classe elle-même
+			String path = MainDanse.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+
+			// Cas rsrc: ou autre URI non hiérarchique
+			if (path == null || path.isEmpty() || path.startsWith("rsrc")) {
+				// Utilise le répertoire courant en dernier recours
+				path = new File(".").getAbsolutePath();
+			}
+
+			File dossier = new File(path).getParentFile();
+			File fichierConfig = new File(dossier, "Config.txt");
+
+			if (!fichierConfig.exists()) {
+				throw new FileNotFoundException(
+						"Fichier Config.txt introuvable à : " + fichierConfig.getAbsolutePath());
+			}
 
 			Scanner scanner;
 			scanner = new Scanner(fichierConfig);
@@ -805,8 +849,8 @@ public class MainDanse extends Application {
 			VariableUtile.fichierInfosDanses = new File(scanner.nextLine());
 
 			scanner.close();
-		} catch (FileNotFoundException e) {
-			afficherErreur("Impossible d'ouvrir le fichier " + fichierConfig + " " + e);
+		} catch (FileNotFoundException | URISyntaxException e) {
+			afficherErreur("Impossible d'ouvrir le fichier " + nomFichierConfig + " " + e);
 		}
 	}
 
@@ -900,7 +944,7 @@ public class MainDanse extends Application {
 					};
 					threadChargement.start();
 				}
-				
+
 				if (!visible) {
 					boutonDanse.setVisible(false);
 				}
@@ -955,7 +999,11 @@ public class MainDanse extends Application {
 			VariableUtile.dansesFiltrees.retainAll(dansesRecherche);
 		}
 
-		validerTri();
+		try {
+			validerTri();
+		} catch (Exception e) {
+			MainDanse.afficherErreur("Erreur validerTri : " + e.getMessage());
+		}
 	}
 
 	protected boolean aAuMoinsUnGenreActive(Danse danse) {
@@ -1033,15 +1081,20 @@ public class MainDanse extends Application {
 
 	public Image importerImage(String imageURI) {
 		URL imageURL = getClass().getResource(imageURI);
+		if (imageURL == null) {
+			afficherErreur("Image non trouvée : " + imageURI);
+			return null;
+		}
 		try {
 			return new Image(imageURL.toExternalForm());
 		} catch (Exception e) {
-			afficherErreur("Image non trouvée : " + imageURI);
+			afficherErreur("Erreur lors du chargement image : " + imageURI + "\n" + e.getMessage());
+			return null;
 		}
-		return null;
 	}
 
 	public static void afficherErreur(String message) {
+		System.out.println(message);
 		Platform.runLater(() -> {
 			Alert a = new Alert(AlertType.ERROR);
 			a.setContentText(message);
@@ -1055,6 +1108,24 @@ public class MainDanse extends Application {
 
 	@Override
 	public void stop() {
+		if (VariableUtile.lecteurAudio != null) {
+			VariableUtile.lecteurAudio.arreter();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			VariableUtile.lecteurAudio.liberer();
+		}
+		if (VariableUtile.lecteurVLCJ != null) {
+			VariableUtile.lecteurVLCJ.arreter();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			VariableUtile.lecteurVLCJ.liberer();
+		}
 		System.exit(0);
 	}
 }
