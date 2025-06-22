@@ -24,6 +24,8 @@ public class Bouton extends Parent {
 	ImageView imageViewIntensite;
 	Image imageBouton1;
 	Image imageBouton2;
+	double largeurImage;
+	double margePourSuggestion;
 	Circle fondIntensite;
 	ImageView imageViewTechnique;
 	Circle fondTechnique;
@@ -38,30 +40,41 @@ public class Bouton extends Parent {
 	Bouton changerDanseBouton;
 	int emplacement;
 
-	//Bouton danse et suggestion
+	// Bouton danse et suggestion
 	public Bouton(double positionLargeur, double positionHauteur, double largeur, double hauteur, double taillePolice,
 			Danse danse, boolean modeSelection, int emplacement) {
 		// emplacement = numéro d'ordre dans le tableau, 6 = bouton suggestion
 		super();
 		this.danse = danse;
-		this.rectangle = new Rectangle(largeur, hauteur);
+		double margePourTexte = 0.07;
+		margePourSuggestion = emplacement == 6 ? 0.07 : 0;
+		largeurImage = largeur * 0.86;
+		double positionXimage = positionLargeur + 0.07 * largeur;
+		double positionYimage = positionHauteur + 0.07 * largeur + (hauteur * margePourSuggestion);
+		this.rectangle = new Rectangle(largeur, hauteur + hauteur * (margePourTexte + margePourSuggestion));
 		rectangle.setX(positionLargeur);
 		rectangle.setY(positionHauteur);
 		rectangle.setFill(danse.couleur2.darker().darker());
 		rectangle.setArcWidth(largeur * 0.25);
 		rectangle.setArcHeight(hauteur * 0.25);
 		rectangle.setVisible(true);
-		this.cadre = new Rectangle(largeur, hauteur);
+		this.cadre = new Rectangle(largeur, hauteur + hauteur * (margePourTexte + margePourSuggestion));
 		cadre.setX(positionLargeur);
 		cadre.setY(positionHauteur);
 		cadre.setArcWidth(largeur * 0.25);
 		cadre.setArcHeight(hauteur * 0.25);
 		cadre.setOpacity(0);
 		this.imageViewBouton = new ImageView(danse.imageDanse1);
-		imageViewBouton.setX(positionLargeur + 0.07 * largeur);
-		imageViewBouton.setY(positionHauteur + 0.07 * largeur);
-		imageViewBouton.setFitWidth(largeur * 0.86);
-		imageViewBouton.setFitHeight(largeur * 0.86);
+		imageViewBouton.setX(positionXimage);
+		imageViewBouton.setY(positionYimage);
+		imageViewBouton.setFitWidth(largeurImage);
+		imageViewBouton.setFitHeight(largeurImage);
+		Rectangle clip = new Rectangle(largeurImage, largeurImage);
+		clip.setX(positionXimage);
+		clip.setY(positionYimage);
+		clip.setArcWidth(largeur * 0.2);
+		clip.setArcHeight(hauteur * 0.2);
+		imageViewBouton.setClip(clip);
 		this.emplacement = emplacement;
 		// Témoin intensité
 		String intensite = null;
@@ -78,7 +91,7 @@ public class Bouton extends Parent {
 		}
 		double rayonFondIntensiteTechnique = largeur * 0.04;
 		double positionXFondIntensite = positionLargeur + 0.101 * largeur;
-		double positionYFondIntensite = positionHauteur + 0.035 * largeur;
+		double positionYFondIntensite = positionHauteur + (hauteur * margePourSuggestion) + 0.035 * largeur;
 		if (intensite != null) {
 			fondIntensite = new Circle(positionXFondIntensite, positionYFondIntensite, rayonFondIntensiteTechnique,
 					danse.couleur1);
@@ -116,9 +129,9 @@ public class Bouton extends Parent {
 			imageViewTechnique.setFitHeight(largeur * 0.06);
 		}
 		if (danse.equals(VariableUtile.danseNeant)) {
-			this.text = new Text(positionLargeur, positionHauteur + 0.98 * hauteur, "Néant");
+			this.text = new Text(positionLargeur, positionHauteur + (0.98 + margePourSuggestion) * hauteur, "Néant");
 		} else {
-			this.text = new Text(positionLargeur, positionHauteur + 0.98 * hauteur,
+			this.text = new Text(positionLargeur, positionHauteur + (0.98 + margePourSuggestion) * hauteur,
 					danse.titreMusique + (danse.artistes.size() > 0 ? " - " + danse.artistes.get(0) : ""));
 		}
 		text.setFont(new Font(VariableUtile.police, taillePolice));
@@ -126,7 +139,7 @@ public class Bouton extends Parent {
 		text.setWrappingWidth(largeur);
 		text.setTextAlignment(TextAlignment.CENTER);
 		text.setFill(VariableUtile.couleurInverse(danse.couleur2.darker().darker()));
-		
+
 //		DropShadow ombreTexte = new DropShadow();
 //		ombreTexte.setRadius(3);
 //		ombreTexte.setOffsetX(0);
@@ -345,7 +358,7 @@ public class Bouton extends Parent {
 		while (text.getLayoutBounds().getWidth() > largeur && taillePoliceDynamique > 5) {
 			taillePoliceDynamique -= 0.5;
 			text.setFont(Font.font(taillePoliceDynamique));
-        }
+		}
 	}
 
 	public static void finirGlissementSelection() {
@@ -357,7 +370,7 @@ public class Bouton extends Parent {
 
 	}
 
-	//Tous les boutons non danse
+	// Tous les boutons non danse
 	public Bouton(double positionLargeur, double positionHauteur, double largeur, double hauteur, double taillePolice,
 			String texte) {
 		super();
@@ -381,7 +394,7 @@ public class Bouton extends Parent {
 			public void run() {
 				imageBouton1 = VariableUtile.main.importerImage("imageBouton/" + texte + "1.png");
 				imageBouton2 = VariableUtile.main.importerImage("imageBouton/" + texte + "2.png");
-
+				
 				imageViewBouton.setImage(imageBouton1);
 			}
 		};
@@ -447,11 +460,12 @@ public class Bouton extends Parent {
 	}
 
 	public void genererSuperTitre(String text) {
-		superTitre = new Text(rectangle.getX(), rectangle.getY() + 0.015 * rectangle.getHeight(), text);
+		superTitre = new Text(rectangle.getX(),
+				rectangle.getY() + (0.015 + margePourSuggestion) * rectangle.getHeight(), text);
 		superTitre.setFont(new Font(VariableUtile.police, VariableUtile.px * 1.5));
 		superTitre.setWrappingWidth(rectangle.getWidth());
 		superTitre.setTextAlignment(TextAlignment.CENTER);
-		superTitre.setFill(danse.couleur1.brighter().brighter().brighter().brighter());
+		superTitre.setFill(VariableUtile.couleurInverse(danse.couleur2.darker().darker()));
 		superTitre.setEffect(effetText);
 		Platform.runLater(() -> {
 			this.getChildren().add(superTitre);
