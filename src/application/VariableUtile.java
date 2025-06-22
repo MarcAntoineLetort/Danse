@@ -127,9 +127,13 @@ public class VariableUtile {
 	public static Text textCompteur;
 
 	public static void genererTextPage() {
-		if (textPage != null && danseSelectionnee != null) {
-			textPage.setText("Danse " + danseSelectionnee.ordreActuel + "/" + dansesFiltrees.size() + " - Page "
-					+ (page + 1) + "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
+		if (textPage != null) {
+			int numDanseSelectionne = 0;
+			if (danseSelectionnee != null) {
+				numDanseSelectionne = danseSelectionnee.ordreActuel;
+			}
+			textPage.setText("Danse " + numDanseSelectionne + "/" + dansesFiltrees.size() + " - Page " + (page + 1)
+					+ "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
 			textPage.setFill(couleur1.brighter().brighter().brighter().brighter());
 			effetTextPage.setColor(VariableUtile.couleur1.invert());
 		}
