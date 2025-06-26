@@ -269,10 +269,7 @@ public class MainDanse extends Application {
 			public void handle(KeyEvent ke) {
 				if (VariableUtile.lecteurVLCJ.estEnLecture() || VariableUtile.lecteurVLCJ.estEnPleinEcran) {
 					if (ke.getCode().equals(KeyCode.ESCAPE)) {
-						VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
-						VariableUtile.scene.setCursor(Cursor.DEFAULT);
-						VariableUtile.videoEnCours = false;
-						VariableUtile.afficherBarreAction();
+						VariableUtile.quitterPleinEcran();
 					} else if (ke.getCode().equals(KeyCode.SPACE)) {
 						if (VariableUtile.lecteurVLCJ != null) {
 							if (VariableUtile.lecteurVLCJ.estEnPause()) {

@@ -249,7 +249,9 @@ public class Bouton extends Parent {
 					VariableUtile.imageViewDanseEchangeSelection.setY(MouseInfo.getPointerInfo().getLocation().getY()
 							- VariableUtile.imageViewDanseEchangeSelection.getFitHeight() / 2);
 					Platform.runLater(() -> {
-						VariableUtile.root.getChildren().add(VariableUtile.imageViewDanseEchangeSelection);
+						if (VariableUtile.imageViewDanseEchangeSelection != null) {
+							VariableUtile.root.getChildren().add(VariableUtile.imageViewDanseEchangeSelection);
+						}
 					});
 
 					VariableUtile.scene.setCursor(Cursor.CLOSED_HAND);
@@ -394,7 +396,7 @@ public class Bouton extends Parent {
 			public void run() {
 				imageBouton1 = VariableUtile.main.importerImage("imageBouton/" + texte + "1.png");
 				imageBouton2 = VariableUtile.main.importerImage("imageBouton/" + texte + "2.png");
-				
+
 				imageViewBouton.setImage(imageBouton1);
 			}
 		};

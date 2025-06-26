@@ -254,9 +254,10 @@ public class VariableUtile {
 	}
 
 	public static void quitterPleinEcran() {
-		VariableUtile.root.setCenter(VariableUtile.root);
+		VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
 		VariableUtile.scene.setCursor(Cursor.DEFAULT);
 		VariableUtile.videoEnCours = false;
+		VariableUtile.afficherBarreAction();
 	}
 
 	public static void lancerVideoAuHasard() {
@@ -405,6 +406,9 @@ public class VariableUtile {
 	}
 
 	public static void finSelection() {
+		VariableUtile.lecteurVLCJ.imageView.setVisible(false);
+		VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ.imageView);
+		quitterPleinEcran();
 		modeSelection = false;
 		genererBoutonSuggestion(true);
 		MainDanse.genererBoutonsDanse(true);
