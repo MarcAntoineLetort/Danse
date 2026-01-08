@@ -210,7 +210,7 @@ public class Bouton extends Parent {
 					}
 					if (!danse.equals(VariableUtile.danseNeant)) {
 						VariableUtile.lancerSon(danse);
-						VariableUtile.lecteurAudio.volume(50);
+						VariableUtile.lecteurAudio.volume(20);
 						VariableUtile.lecteurAudio.definirTempsDepart(20);
 
 //						Timeline timelineMusique = new Timeline();

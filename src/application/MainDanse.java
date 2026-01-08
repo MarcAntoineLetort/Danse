@@ -853,7 +853,7 @@ public class MainDanse extends Application {
 
 	private void importerTitresVideosDanses() {
 		try {
-			Files.list(VariableUtile.dossierDanses.toPath()).limit(800).forEach(path -> {
+			Files.list(VariableUtile.dossierDanses.toPath()).limit(5000).forEach(path -> {
 				File fichierDanse = path.toFile();
 				String nomCompletDanse = fichierDanse.getName();
 				String titreMusique;
