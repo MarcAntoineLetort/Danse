@@ -103,6 +103,24 @@ if errorlevel 1 (
 )
 
 REM ================================
+REM  COPIE DE FFMPEG
+REM ================================
+echo ===================================
+echo  Copie de ffmpeg
+echo ===================================
+
+set APP_DIR=%DIST%\%APP_NAME%
+
+if not exist "%APP_DIR%" (
+    echo ERREUR : dossier application introuvable
+    pause
+    exit /b 1
+)
+
+mkdir "%APP_DIR%\ffmpeg"
+copy /Y "ffmpeg\ffmpeg.exe" "%APP_DIR%\ffmpeg\ffmpeg.exe"
+
+REM ================================
 REM  NETTOYAGE FINAL
 REM ================================
 rmdir /s /q "%RUNTIME_TEMP%"

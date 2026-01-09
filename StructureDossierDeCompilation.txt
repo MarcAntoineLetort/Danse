@@ -1,0 +1,6 @@
+build.bat
+Config.txt
+DanseV11.jar
+dist
+ffmpeg/ffmpeg.exe
+icons/Danse.ico
