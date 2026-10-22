@@ -1,11 +1,10 @@
 package application;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -13,15 +12,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -31,9 +30,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.RadialGradient;
-import javafx.scene.paint.Stop;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -45,18 +41,26 @@ public class MainDanse extends Application {
 	Media sonDecompte;
 	MediaPlayer mediaPlayerCompteur;
 	ImageView imageChargement;
+	private static Timeline decompteAnim;
 
 	@Override
 	public void start(Stage pStage) {
+		Diagnostic.init();
+		Theme.chargerPolice();
 		VariableUtile.primaryStage = pStage;
 		VariableUtile.root = new BorderPane();
 		VariableUtile.main = this;
 		VariableUtile.largeurFenetre = Screen.getPrimary().getVisualBounds().getWidth();
 		VariableUtile.hauteurFenetre = Screen.getPrimary().getVisualBounds().getHeight();
 		VariableUtile.scene = new Scene(VariableUtile.root, VariableUtile.largeurFenetre, VariableUtile.hauteurFenetre);
+		VariableUtile.scene.setFill(Theme.FOND);
 		VariableUtile.primaryStage.setMaximized(true);
+		VariableUtile.primaryStage.setTitle("Danse");
 		VariableUtile.px = VariableUtile.largeurFenetre / 100;
 		VariableUtile.py = VariableUtile.hauteurFenetre / 100;
+		VariableUtile.police = Theme.famille;
+
+		Theme.installerFond(VariableUtile.root);
 
 		int alea = (int) (Math.random() * 6);
 		String imageChargementURI = null;
@@ -73,79 +77,67 @@ public class MainDanse extends Application {
 			break;
 		case 2:
 			imageChargementURI = "imageBouton/chargement_6.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 0, 95);// Bleu foncé
-			VariableUtile.couleur2 = Color.rgb(30, 20, 0);// Noir
+			VariableUtile.couleur1 = Color.rgb(0, 0, 95);
+			VariableUtile.couleur2 = Color.rgb(30, 20, 0);
 			break;
 		case 3:
 			imageChargementURI = "imageBouton/chargement_8.jpg";
-			VariableUtile.couleur1 = Color.rgb(0, 50, 90);// Bleu foncé
-			VariableUtile.couleur2 = Color.rgb(90, 90, 0);// Vert kaki
+			VariableUtile.couleur1 = Color.rgb(0, 50, 90);
+			VariableUtile.couleur2 = Color.rgb(90, 90, 0);
 			break;
 		case 4:
 			imageChargementURI = "imageBouton/chargement_13_latino.png";
-			VariableUtile.couleur1 = Color.rgb(3, 183, 48);// Vert
-			VariableUtile.couleur2 = Color.rgb(253, 221, 42);// Jaune
+			VariableUtile.couleur1 = Color.rgb(3, 183, 48);
+			VariableUtile.couleur2 = Color.rgb(253, 221, 42);
 			break;
-		case 5:
-			imageChargementURI = "imageBouton/chargement_14_folk.png";
-			VariableUtile.couleur1 = Color.rgb(198, 92, 33);// Orange
-			VariableUtile.couleur2 = Color.rgb(26, 130, 67);// Vert
-			break;
-
 		default:
+			imageChargementURI = "imageBouton/chargement_14_folk.png";
+			VariableUtile.couleur1 = Color.rgb(198, 92, 33);
+			VariableUtile.couleur2 = Color.rgb(26, 130, 67);
 			break;
 		}
-
-		VariableUtile.shadePaint = new RadialGradient(0.5, 0.5, 0, 0, 1, true, CycleMethod.NO_CYCLE,
-				new Stop(1, VariableUtile.couleur1), new Stop(0, VariableUtile.couleur2));
-
-		VariableUtile.scene.setFill(VariableUtile.shadePaint);
 
 		VariableUtile.primaryStage.setScene(VariableUtile.scene);
 		VariableUtile.primaryStage.show();
 
-		imageChargement = new ImageView(VariableUtile.main.importerImage(imageChargementURI));
-		imageChargement.setX((VariableUtile.largeurFenetre - imageChargement.getImage().getWidth()) / 2);
-		imageChargement.setY((VariableUtile.hauteurFenetre - imageChargement.getImage().getHeight()) / 2);
-		VariableUtile.root.getChildren().add(imageChargement);
+		Image imgChargement = importerImage(imageChargementURI);
+		if (imgChargement != null) {
+			imageChargement = new ImageView(imgChargement);
+			imageChargement.setX((VariableUtile.largeurFenetre - imgChargement.getWidth()) / 2);
+			imageChargement.setY((VariableUtile.hauteurFenetre - imgChargement.getHeight()) / 2);
+			VariableUtile.root.getChildren().add(imageChargement);
+		}
 
 		// Désactivation des interactions souris pendant le chargement
 		VariableUtile.root.setDisable(true);
 
-		Thread threadChargement = new Thread() {
-			public void run() {
-				chargerJeu();
-			}
-		};
-		threadChargement.start();
-
-		// Thread qui attend la fin de threadChargement
-		new Thread(() -> {
+		// Lectures de fichiers et initialisation de VLC : hors du thread JavaFX.
+		// La construction de l'interface se fait ensuite SUR le thread JavaFX.
+		Thread threadChargement = new Thread(() -> {
 			try {
-				threadChargement.join();
-
-				Platform.runLater(() -> {
-					// Réactivation des interactions souris
-					VariableUtile.root.setDisable(false);
-					VariableUtile.root.getChildren().remove(imageChargement);
-
-					validerFiltre();
-					Platform.runLater(() -> {
-
-						VariableUtile.textCompteur.toFront();
-						if (VariableUtile.boutonSuggestion.danse.imageDanse2 != null) {
-							VariableUtile.primaryStage.getIcons().add(VariableUtile.boutonSuggestion.danse.imageDanse2);
-						} else {
-							VariableUtile.primaryStage.getIcons()
-									.add(VariableUtile.boutonFiltre2Danseurs.imageViewBouton.getImage());
-						}
-					});
-				});
-			} catch (InterruptedException e) {
-				MainDanse.afficherErreur("Erreur de fin de chargement : " + e.getMessage());
+				chargerDonnees();
+			} catch (Throwable e) {
+				Diagnostic.log("Erreur de chargement des données", e);
+				afficherErreur("Erreur de chargement : " + e);
 			}
-		}).start();
-
+			Platform.runLater(() -> {
+				try {
+					construireInterface();
+				} catch (Throwable e) {
+					Diagnostic.log("Erreur de construction de l'interface", e);
+					afficherErreur("Erreur d'interface : " + e);
+				}
+				VariableUtile.root.setDisable(false);
+				if (imageChargement != null) {
+					VariableUtile.root.getChildren().remove(imageChargement);
+				}
+				validerFiltre();
+				VariableUtile.textCompteur.toFront();
+				VariableUtile.demarrerAntiVeille();
+			});
+		}, "chargement");
+		threadChargement.setDaemon(true);
+		threadChargement.start();
 	}
 
 	public static Media mediaDepuisRessource(String chemin) throws IOException {
@@ -161,58 +153,51 @@ public class MainDanse extends Application {
 		}
 	}
 
-	private void chargerJeu() {
-
+	/** Partie « données » du chargement (thread de chargement, pas d'éléments d'interface). */
+	private void chargerDonnees() {
 		try {
 			sonDecompte = mediaDepuisRessource("/application/selection1.mp3");
 			mediaPlayerCompteur = new MediaPlayer(sonDecompte);
-
 		} catch (Exception e) {
-			MainDanse.afficherErreur("Erreur chargement MP3 : " + e.getMessage());
+			Diagnostic.log("Erreur chargement MP3", e);
+			afficherErreur("Erreur chargement MP3 : " + e.getMessage());
 		}
 
 		try {
 			VariableUtile.lecteurVLCJ = new LecteurVLCJ();
 			VariableUtile.lecteurAudio = new LecteurAudioVLC();
-
-			VariableUtile.danses = new HashMap<String, Danse>();
-			VariableUtile.dansesFiltrees = new ArrayList<>();
-			VariableUtile.dansesSelectionnees = new ArrayList<>();
-
-			VariableUtile.danseNeant = new Danse("Néant", "Quitter", Color.BLACK, Color.WHITE);
-
-			VariableUtile.artistes = new HashMap<Integer, String>();
-		} catch (Exception e) {
-			MainDanse.afficherErreur("Erreur d'initialisation : " + e);
+		} catch (Throwable e) {
+			Diagnostic.log("Initialisation de VLC impossible", e);
+			afficherErreur("VLC n'a pas pu démarrer : " + e);
 		}
 
+		VariableUtile.danses = new HashMap<String, Danse>();
+		VariableUtile.dansesFiltrees = new ArrayList<>();
+		VariableUtile.dansesSelectionnees = new ArrayList<>();
+		VariableUtile.danseNeant = new Danse("Néant", "Quitter", Color.BLACK, Color.WHITE);
+		VariableUtile.artistes = new HashMap<Integer, String>();
+
 		importerConfig();
+		if (VariableUtile.dossierDanses != null) {
+			importerTitresVideosDanses();
+			importerListeArtistes();
+			completerDanses();
+		}
+	}
 
-		importerTitresVideosDanses();
-
-		importerListeArtistes();
-
-		completerDanses();
-
-		// TODO ajouter le filtre version jd
-
+	/** Partie « interface » du chargement (thread JavaFX). */
+	private void construireInterface() {
 		genererBoutonsFinDeDanse();
 
 		VariableUtile.dansesFiltrees.addAll(VariableUtile.danses.values());
 
 		genererBoutonsPagePrincipale();
-
 		genererBoutonsFiltre();
-
 		genererBoutonsTri();
-
 		genererBoutonIllimite();
-
 		genererBoutonMelange();
-
 		genererBoutonsSelection();
 
-		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuggestion);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonSuivant);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonPrecedent);
 		VariableUtile.boutonsMenu.add(VariableUtile.boutonFiltrer);
@@ -234,113 +219,150 @@ public class MainDanse extends Application {
 		VariableUtile.boutonsAction.add(VariableUtile.boutonRejouer);
 		VariableUtile.boutonsAction.add(VariableUtile.boutonPasser);
 
+		VariableUtile.effetTextPage = Theme.lueur(Color.BLACK, 0.7, 10);
+
+		// Indicateur « Danse n/N - Page p/P »
 		VariableUtile.textPage = new Text(VariableUtile.px * 35, VariableUtile.hauteurFenetre * 0.18, "");
 		VariableUtile.textes.add(VariableUtile.textPage);
-		VariableUtile.textPage.setFont(new Font(VariableUtile.police, VariableUtile.py * 2));
+		VariableUtile.textPage.setFont(Theme.police(VariableUtile.py * 2));
 		VariableUtile.textPage.setWrappingWidth(VariableUtile.px * 17);
 		VariableUtile.textPage.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textPage.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.effetTextPage = new DropShadow();
-		VariableUtile.effetTextPage.setColor(VariableUtile.couleur1.invert());
-		VariableUtile.effetTextPage.setRadius(50);
-		VariableUtile.effetTextPage.setSpread(0.8);
+		VariableUtile.textPage.setFill(Color.web("#e8f0ff"));
 		VariableUtile.textPage.setEffect(VariableUtile.effetTextPage);
 		VariableUtile.textPage.setMouseTransparent(true);
 
+		// Gros chiffre du décompte
 		VariableUtile.textCompteur = new Text(VariableUtile.px * 0, VariableUtile.py * 65, "");
-		VariableUtile.textCompteur.setFont(new Font(VariableUtile.police, VariableUtile.py * 55));
+		VariableUtile.textCompteur.setFont(Theme.police(VariableUtile.py * 55));
 		VariableUtile.textCompteur.setWrappingWidth(VariableUtile.px * 100);
 		VariableUtile.textCompteur.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textCompteur.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textCompteur.setEffect(VariableUtile.effetTextPage);
+		VariableUtile.textCompteur.setFill(Color.web("#ffffff", 0.95));
+		VariableUtile.textCompteur.setEffect(Theme.lueur(Theme.CYAN, 0.9, 40));
 		VariableUtile.textCompteur.setVisible(false);
+		VariableUtile.textCompteur.setMouseTransparent(true);
 
-		Platform.runLater(() -> {
-			VariableUtile.root.getChildren().add(VariableUtile.textPage);
-			VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
-		});
+		VariableUtile.root.getChildren().add(VariableUtile.textPage);
+		VariableUtile.root.getChildren().add(VariableUtile.textCompteur);
 
 		// Barre de recherche
-		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 50, VariableUtile.py * 2,
-				VariableUtile.px * 17, VariableUtile.py * 3.5, "LoupePetite");
+		VariableUtile.barreRecherche = new BarreRecherche(VariableUtile.px * 46.5, VariableUtile.py * 6.1,
+				VariableUtile.px * 28, VariableUtile.py * 6.6, "LoupePetite");
 		VariableUtile.barreRecherche.setVisible(false);
 
+		// Touches de contrôle (Échap, espace, flèches, retour arrière)
 		VariableUtile.scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent ke) {
-				if (VariableUtile.lecteurVLCJ.estEnLecture() || VariableUtile.lecteurVLCJ.estEnPleinEcran) {
-					if (ke.getCode().equals(KeyCode.ESCAPE)) {
+				KeyCode code = ke.getCode();
+				if (!VariableUtile.ecranMenuActif() || VariableUtile.lecteurVLCJ.estEnPleinEcran) {
+					if (code == KeyCode.ESCAPE) {
 						VariableUtile.quitterPleinEcran();
-					} else if (ke.getCode().equals(KeyCode.SPACE)) {
-						if (VariableUtile.lecteurVLCJ != null) {
-							if (VariableUtile.lecteurVLCJ.estEnPause()) {
-								VariableUtile.rembobinerVideo(3);
-								VariableUtile.lecteurVLCJ.demarrer(null);
-							} else if (VariableUtile.lecteurVLCJ.estEnLecture()) {
-								VariableUtile.lecteurVLCJ.pause();
-							}
+					} else if (code == KeyCode.SPACE) {
+						if (VariableUtile.lecteurVLCJ.estEnPause()) {
+							VariableUtile.rembobinerVideo(3);
+							VariableUtile.lecteurVLCJ.demarrer(null);
+						} else if (VariableUtile.lecteurVLCJ.estEnLecture()) {
+							VariableUtile.lecteurVLCJ.pause();
 						}
 					}
 				} else {
-					// Barre de recherche
-					if (ke.getCode().isLetterKey() || ke.getCode().isDigitKey() || ke.getCode().equals(KeyCode.SPACE)) {
-						VariableUtile.barreRecherche.text
-								.setText(VariableUtile.barreRecherche.text.getText() + ke.getText());
+					if (code == KeyCode.BACK_SPACE && VariableUtile.barreRecherche.text.getText().length() > 0) {
+						String t = VariableUtile.barreRecherche.text.getText();
+						VariableUtile.barreRecherche.text.setText(t.substring(0, t.length() - 1));
 						validerFiltre();
-					} else if (ke.getCode().equals(KeyCode.BACK_SPACE)
-							&& VariableUtile.barreRecherche.text.getText().length() > 0) {
-						VariableUtile.barreRecherche.text.setText(VariableUtile.barreRecherche.text.getText()
-								.substring(0, VariableUtile.barreRecherche.text.getText().length() - 1));
-						validerFiltre();
+					} else if (code == KeyCode.ESCAPE) {
+						effacerRecherche();
+					} else if ((code == KeyCode.LEFT || code == KeyCode.PAGE_UP) && !VariableUtile.modeFiltre
+							&& !VariableUtile.modeTri && !VariableUtile.modeSelection) {
+						pagePrecedente();
+					} else if ((code == KeyCode.RIGHT || code == KeyCode.PAGE_DOWN) && !VariableUtile.modeFiltre
+							&& !VariableUtile.modeTri && !VariableUtile.modeSelection) {
+						pageSuivante();
 					}
+				}
+			}
+		});
+		// Saisie du texte : KEY_TYPED gère aussi les accents, apostrophes, tirets…
+		VariableUtile.scene.setOnKeyTyped(new EventHandler<KeyEvent>() {
+			public void handle(KeyEvent ke) {
+				if (!VariableUtile.ecranMenuActif()) {
+					return;
+				}
+				String c = ke.getCharacter();
+				if (c == null || c.isEmpty() || c.charAt(0) < 32 || c.charAt(0) == 127 || ke.isControlDown()
+						|| ke.isMetaDown()) {
+					return;
+				}
+				String actuel = VariableUtile.barreRecherche.text.getText();
+				if (actuel.length() < 40) {
+					VariableUtile.barreRecherche.text.setText(actuel + c);
+					validerFiltre();
 				}
 			}
 		});
 	}
 
+	public static void effacerRecherche() {
+		if (VariableUtile.barreRecherche != null && VariableUtile.barreRecherche.text.getText().length() > 0) {
+			VariableUtile.barreRecherche.text.setText("");
+			VariableUtile.main.validerFiltre();
+		}
+	}
+
+	public static void pageSuivante() {
+		if (VariableUtile.page < VariableUtile.nbPages() - 1) {
+			VariableUtile.page++;
+		} else {
+			VariableUtile.page = 0;
+		}
+		genererBoutonsDanse(true);
+		VariableUtile.genererTextPage();
+	}
+
+	public static void pagePrecedente() {
+		if (VariableUtile.page > 0) {
+			VariableUtile.page--;
+		} else {
+			VariableUtile.page = VariableUtile.nbPages() - 1;
+		}
+		genererBoutonsDanse(true);
+		VariableUtile.genererTextPage();
+	}
+
+	private static final double LB = 7.4; // largeur des boutons de menu (en % de la largeur)
+	private static final double HB = 12.4; // hauteur des boutons de menu (en % de la hauteur)
+
 	private void genererBoutonsPagePrincipale() {
 
 		genererBoutonsDanse(false, false, false);
 
-		VariableUtile.boutonSuivant = new Bouton(VariableUtile.px * 75, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Suivant");
+		VariableUtile.boutonSuivant = new Bouton(VariableUtile.px * 76, VariableUtile.py * 47.5, VariableUtile.px * LB,
+				VariableUtile.py * HB, 22, "Suivant");
 		VariableUtile.boutonSuivant.setVisible(false);
+		VariableUtile.boutonSuivant.cadre.setOnMouseReleased(me -> pageSuivante());
 
-		VariableUtile.boutonSuivant.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				if (VariableUtile.page < (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6)) {
-					VariableUtile.page++;
-				} else {
-					VariableUtile.page = 0;
-				}
-
-				genererBoutonsDanse(true);
-			}
-		});
-		VariableUtile.boutonPrecedent = new Bouton(VariableUtile.px * 5, VariableUtile.py * 45, VariableUtile.px * 7,
-				VariableUtile.px * 7, 25, "Précédent");
+		VariableUtile.boutonPrecedent = new Bouton(VariableUtile.px * 4.2, VariableUtile.py * 47.5,
+				VariableUtile.px * LB, VariableUtile.py * HB, 22, "Précédent");
 		VariableUtile.boutonPrecedent.setVisible(false);
+		VariableUtile.boutonPrecedent.cadre.setOnMouseReleased(me -> pagePrecedente());
 
-		VariableUtile.boutonPrecedent.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				if (VariableUtile.page > 0) {
-					VariableUtile.page--;
-				} else {
-					VariableUtile.page = (int) Math.ceil(VariableUtile.dansesFiltrees.size() / 6);
-				}
-				genererBoutonsDanse(true);
-			}
-		});
+		// Petites flèches de part et d'autre de l'indicateur de page
+		double cote = VariableUtile.px * 2.2;
+		double yFleche = VariableUtile.hauteurFenetre * 0.18 - cote * 0.62;
+		Bouton flecheGauche = new Bouton(VariableUtile.px * 34.4, yFleche, cote, cote, 0, "ChevronGauche");
+		flecheGauche.setVisible(false);
+		flecheGauche.cadre.setOnMouseReleased(me -> pagePrecedente());
+		Bouton flecheDroite = new Bouton(VariableUtile.px * 51.6, yFleche, cote, cote, 0, "ChevronDroite");
+		flecheDroite.setVisible(false);
+		flecheDroite.cadre.setOnMouseReleased(me -> pageSuivante());
+		VariableUtile.boutonsMenu.add(flecheGauche);
+		VariableUtile.boutonsMenu.add(flecheDroite);
 	}
 
 	private void genererBoutonsFinDeDanse() {
 		VariableUtile.boutonQuitter = new Bouton(VariableUtile.px * 93, VariableUtile.py * 45, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Quitter");
 		VariableUtile.boutonQuitter.setVisible(false);
-		VariableUtile.boutonQuitter.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.quitterDanse();
-			}
-		});
+		VariableUtile.boutonQuitter.cadre.setOnMouseReleased(me -> VariableUtile.quitterDanse());
 
 		VariableUtile.boutonRejouer = new Bouton(VariableUtile.px * 93, VariableUtile.py * 60, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Rejouer");
@@ -356,51 +378,21 @@ public class MainDanse extends Application {
 					VariableUtile.primaryStage.setFullScreen(true);
 					VariableUtile.cacherMenuPrincipal();
 					VariableUtile.cacherBarreAction();
+					VariableUtile.videoEnCours = true;
 
-					new java.util.Timer().schedule(new java.util.TimerTask() {
-						@Override
-						public void run() {
-							mediaPlayerCompteur.setStartTime(Duration.ZERO);
-							mediaPlayerCompteur.seek(Duration.ZERO);
-							mediaPlayerCompteur.play();
-
-							decompte("3");
-						}
-					}, 500);
-					new java.util.Timer().schedule(new java.util.TimerTask() {
-						@Override
-						public void run() {
-							mediaPlayerCompteur.setStartTime(Duration.ZERO);
-							mediaPlayerCompteur.seek(Duration.ZERO);
-							mediaPlayerCompteur.play();
-
-							decompte("2");
-						}
-					}, 1500);
-					new java.util.Timer().schedule(new java.util.TimerTask() {
-						@Override
-						public void run() {
-							mediaPlayerCompteur.setStartTime(Duration.ZERO);
-							mediaPlayerCompteur.seek(Duration.ZERO);
-							mediaPlayerCompteur.play();
-
-							decompte("1");
-						}
-					}, 2500);
-					new java.util.Timer().schedule(new java.util.TimerTask() {
-						@Override
-						public void run() {
-							Platform.runLater(() -> {
-								VariableUtile.lecteurVLCJ.demarrer(null);
-
+					// Décompte 3-2-1 : tout se passe sur le thread JavaFX et peut être annulé
+					annulerDecompte();
+					decompteAnim = new Timeline(new KeyFrame(Duration.millis(500), e -> bipDecompte("3")),
+							new KeyFrame(Duration.millis(1500), e -> bipDecompte("2")),
+							new KeyFrame(Duration.millis(2500), e -> bipDecompte("1")),
+							new KeyFrame(Duration.millis(3500), e -> {
 								finirDecompte();
-//								VariableUtile.afficherBarreAction();
+								Theme.afficherFond(false);
 								VariableUtile.lecteurVLCJ.imageView.setVisible(true);
-//								VariableUtile.lecteurVLCJ.imageView.toFront();
+								VariableUtile.lecteurVLCJ.demarrer(null);
 								VariableUtile.scene.setCursor(Cursor.NONE);
-							});
-						}
-					}, 3500);
+							}));
+					decompteAnim.play();
 				} else {
 					VariableUtile.stoperMelange();
 					VariableUtile.lancerMelange();
@@ -411,117 +403,102 @@ public class MainDanse extends Application {
 		VariableUtile.boutonPasser = new Bouton(VariableUtile.px * 93, VariableUtile.py * 75, VariableUtile.px * 6.8,
 				VariableUtile.px * 7, 25, "Passer");
 		VariableUtile.boutonPasser.setVisible(false);
-		VariableUtile.boutonPasser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.lecteurVLCJ.arreter();
-//				VariableUtile.mediaView.setVisible(false);
-//				Platform.runLater(() -> {
-//					VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-//				});
-				VariableUtile.lancerVideoAuHasard();
-			}
+		VariableUtile.boutonPasser.cadre.setOnMouseReleased(me -> {
+			VariableUtile.lecteurVLCJ.arreter();
+			VariableUtile.lancerVideoAuHasard();
 		});
+	}
+
+	private void bipDecompte(String nombre) {
+		try {
+			if (mediaPlayerCompteur != null) {
+				mediaPlayerCompteur.seek(Duration.ZERO);
+				mediaPlayerCompteur.play();
+			}
+		} catch (Exception e) {
+			Diagnostic.log("Son du décompte", e);
+		}
+		decompte(nombre);
+	}
+
+	/** Annule un décompte en cours (sinon la vidéo démarrerait quand même après « Quitter »). */
+	public static void annulerDecompte() {
+		if (decompteAnim != null) {
+			decompteAnim.stop();
+			decompteAnim = null;
+		}
+		if (VariableUtile.textCompteur != null) {
+			VariableUtile.textCompteur.setVisible(false);
+		}
 	}
 
 	private void genererBoutonMelange() {
-		// Mélange
-		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 26, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Mélange");
+		VariableUtile.boutonMelange = new Bouton(VariableUtile.px * 27.2, VariableUtile.py * 3.2, VariableUtile.px * LB,
+				VariableUtile.py * HB, 22, "Mélange");
 		VariableUtile.boutonMelange.setVisible(false);
-		VariableUtile.boutonMelange.toFront();
-		VariableUtile.boutonMelange.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.lancerMelange();
-			}
-		});
+		VariableUtile.boutonMelange.cadre.setOnMouseReleased(me -> VariableUtile.lancerMelange());
 	}
 
 	private void genererBoutonIllimite() {
-		// Illimité
-		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Illimite");
-		VariableUtile.boutonIllimite.text.setText("Illimité");
+		VariableUtile.boutonIllimite = new Bouton(VariableUtile.px * 18.8, VariableUtile.py * 3.2, VariableUtile.px * LB,
+				VariableUtile.py * HB, 22, "Illimite");
+		VariableUtile.boutonIllimite.setLabel("Illimité");
 		VariableUtile.boutonIllimite.setVisible(false);
-		VariableUtile.boutonIllimite.toFront();
-		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
+		VariableUtile.boutonIllimite.cadre.setOnMouseReleased(me -> {
+			if (!VariableUtile.dansesFiltrees.isEmpty()) {
 				VariableUtile.modeIllimite = true;
-				VariableUtile.lancerVideoAuHasard();
 			}
+			VariableUtile.lancerVideoAuHasard();
 		});
 	}
 
 	private void genererBoutonsSelection() {
-		// Sélection
-		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 34, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Selection");
-		VariableUtile.boutonSelection.text.setText("Sélection");
+		VariableUtile.boutonSelection = new Bouton(VariableUtile.px * 35.6, VariableUtile.py * 3.2,
+				VariableUtile.px * LB, VariableUtile.py * HB, 22, "Selection");
+		VariableUtile.boutonSelection.setLabel("Sélection");
 		VariableUtile.boutonSelection.setVisible(false);
-		VariableUtile.boutonSelection.toFront();
-		VariableUtile.boutonSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.ouvrirEcranSelection();
-			}
-		});
+		VariableUtile.boutonSelection.cadre.setOnMouseReleased(me -> VariableUtile.ouvrirEcranSelection());
+
 		VariableUtile.boutonLancerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 80,
 				VariableUtile.px * 8.8, VariableUtile.px * 8, 25, "Valider_filtre");
-		VariableUtile.boutonLancerSelection.text.setText("C'est parti !");
+		VariableUtile.boutonLancerSelection.setLabel("C'est parti !");
 		VariableUtile.boutonLancerSelection.setVisible(false);
-		VariableUtile.boutonLancerSelection.toFront();
-		VariableUtile.boutonLancerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.numeroProchaineDanseSelection = 0;
-				if (sauterDansesVides()) {
-					VariableUtile.lancerVideo(
-							VariableUtile.dansesSelectionnees.get(VariableUtile.numeroProchaineDanseSelection));
-				}
-
+		VariableUtile.boutonLancerSelection.cadre.setOnMouseReleased(me -> {
+			VariableUtile.numeroProchaineDanseSelection = 0;
+			if (sauterDansesVides()) {
+				VariableUtile.lancerVideo(
+						VariableUtile.dansesSelectionnees.get(VariableUtile.numeroProchaineDanseSelection));
 			}
 		});
 		VariableUtile.boutonReinitialiserSelection = new Bouton(VariableUtile.px * 77, VariableUtile.py * 2,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rejouer");
-		VariableUtile.boutonReinitialiserSelection.text.setText("Au hasard");
+		VariableUtile.boutonReinitialiserSelection.setLabel("Au hasard");
 		VariableUtile.boutonReinitialiserSelection.setVisible(false);
-		VariableUtile.boutonReinitialiserSelection.toFront();
-		VariableUtile.boutonReinitialiserSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.ouvrirEcranSelection();
-			}
-		});
+		VariableUtile.boutonReinitialiserSelection.cadre
+				.setOnMouseReleased(me -> VariableUtile.ouvrirEcranSelection());
 		VariableUtile.boutonAnnulerSelection = new Bouton(VariableUtile.px * 85, VariableUtile.py * 2,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Quitter");
-		VariableUtile.boutonAnnulerSelection.text.setText("Annuler");
+		VariableUtile.boutonAnnulerSelection.setLabel("Annuler");
 		VariableUtile.boutonAnnulerSelection.setVisible(false);
-		VariableUtile.boutonAnnulerSelection.toFront();
-		VariableUtile.boutonAnnulerSelection.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.finSelection();
-			}
-		});
+		VariableUtile.boutonAnnulerSelection.cadre.setOnMouseReleased(me -> VariableUtile.finSelection());
 	}
 
 	private void genererBoutonsTri() {
-		VariableUtile.boutonTrier = new Bouton(VariableUtile.px * 10, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Trier");
+		VariableUtile.boutonTrier = new Bouton(VariableUtile.px * 10.4, VariableUtile.py * 3.2, VariableUtile.px * LB,
+				VariableUtile.py * HB, 22, "Trier");
 		VariableUtile.boutonTrier.setVisible(false);
-		VariableUtile.boutonTrier.toFront();
-		VariableUtile.boutonTrier.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.cacherMenuPrincipal();
-				VariableUtile.cacherEcranSelection();
-				VariableUtile.afficherMenuTri();
-			}
+		VariableUtile.boutonTrier.cadre.setOnMouseReleased(me -> {
+			VariableUtile.cacherMenuPrincipal();
+			VariableUtile.cacherEcranSelection();
+			VariableUtile.afficherMenuTri();
 		});
 		VariableUtile.boutonTriValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
-		VariableUtile.boutonTriValider.text.setText("Valider");
+		VariableUtile.boutonTriValider.setLabel("Valider");
 		VariableUtile.boutonTriValider.setVisible(false);
-		VariableUtile.boutonTriValider.toFront();
-		VariableUtile.boutonTriValider.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.modeTri = false;
-				validerTri();
-			}
+		VariableUtile.boutonTriValider.cadre.setOnMouseReleased(me -> {
+			VariableUtile.modeTri = false;
+			validerTri();
 		});
 
 		int nbBouton = 5;
@@ -557,168 +534,97 @@ public class MainDanse extends Application {
 		}
 	}
 
+	private Text titreFiltre(String libelle, double x, double y, double largeur) {
+		Text t = new Text(VariableUtile.px * x, VariableUtile.py * y, libelle);
+		t.setFont(Theme.police(VariableUtile.py * 2.6));
+		t.setWrappingWidth(VariableUtile.px * largeur);
+		t.setTextAlignment(TextAlignment.CENTER);
+		t.setFill(Color.WHITE);
+		t.setEffect(Theme.lueur(Theme.CYAN, 0.8, 14));
+		t.setVisible(false);
+		t.setMouseTransparent(true);
+		VariableUtile.textesFiltres.add(t);
+		VariableUtile.root.getChildren().add(t);
+		return t;
+	}
+
+	private Bouton boutonFiltre(double x, double y, String image) {
+		return new Bouton(VariableUtile.px * x, VariableUtile.py * y, VariableUtile.px * 6.8, VariableUtile.px * 7, 25,
+				image);
+	}
+
 	private void genererBoutonsFiltre() {
-		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 2, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Filtrer");
+		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 3.2, VariableUtile.px * LB,
+				VariableUtile.py * HB, 22, "Filtrer");
 		VariableUtile.boutonFiltrer.setVisible(false);
-		VariableUtile.boutonFiltrer.toFront();
-		VariableUtile.boutonFiltrer.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.cacherMenuPrincipal();
-				VariableUtile.cacherEcranSelection();
-				VariableUtile.afficherMenuFiltres();
-			}
+		VariableUtile.boutonFiltrer.cadre.setOnMouseReleased(me -> {
+			VariableUtile.cacherMenuPrincipal();
+			VariableUtile.cacherEcranSelection();
+			VariableUtile.afficherMenuFiltres();
 		});
 
 		VariableUtile.boutonFiltreValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
-		VariableUtile.boutonFiltreValider.text.setText("Valider");
+		VariableUtile.boutonFiltreValider.setLabel("Valider");
 		VariableUtile.boutonFiltreValider.setVisible(false);
-		VariableUtile.boutonFiltreValider.toFront();
-		VariableUtile.boutonFiltreValider.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				VariableUtile.modeFiltre = false;
-				validerFiltre();
-			}
+		VariableUtile.boutonFiltreValider.cadre.setOnMouseReleased(me -> {
+			VariableUtile.modeFiltre = false;
+			validerFiltre();
 		});
-		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 81, VariableUtile.py * 85,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 20, "Rejouer");
-		VariableUtile.boutonFiltreReinitialiser.text.setText("Réinitialiser");
+		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 79.6, VariableUtile.py * 85,
+				VariableUtile.px * 8.8, VariableUtile.px * 7, 20, "Rejouer");
+		VariableUtile.boutonFiltreReinitialiser.setLabel("Réinitialiser");
 		VariableUtile.boutonFiltreReinitialiser.setVisible(false);
-		VariableUtile.boutonFiltreReinitialiser.toFront();
-		VariableUtile.boutonFiltreReinitialiser.cadre.setOnMouseReleased(new EventHandler<MouseEvent>() {
-			public void handle(MouseEvent me) {
-				for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
-					boutonFiltre.validerBouton();
-				}
+		VariableUtile.boutonFiltreReinitialiser.cadre.setOnMouseReleased(me -> {
+			for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+				boutonFiltre.validerBouton();
 			}
 		});
 
-		VariableUtile.textFiltreIntensite = new Text(VariableUtile.px * 1, VariableUtile.py * 14, "Intensité");
-		VariableUtile.textFiltreIntensite.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.textFiltreIntensite.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.textFiltreIntensite.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textFiltreIntensite.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textFiltreIntensite.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textFiltreIntensite.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.textFiltreIntensite);
-		Platform.runLater(() -> {
-			VariableUtile.root.getChildren().add(VariableUtile.textFiltreIntensite);
-		});
-
-		VariableUtile.boutonFiltreIntensiteFaible = new Bouton(VariableUtile.px * 2, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_faible");
+		VariableUtile.textFiltreIntensite = titreFiltre("Intensité", 1, 14, 9);
+		VariableUtile.boutonFiltreIntensiteFaible = boutonFiltre(2, 17, "Intensite_faible");
 		VariableUtile.boutonFiltreIntensiteFaible.finirGenerationBoutonFiltre("Faible");
-
-		VariableUtile.boutonFiltreIntensiteModeree = new Bouton(VariableUtile.px * 2, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_moderee");
+		VariableUtile.boutonFiltreIntensiteModeree = boutonFiltre(2, 37, "Intensite_moderee");
 		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("Modérée");
-
-		VariableUtile.boutonFiltreIntensiteIntense = new Bouton(VariableUtile.px * 2, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Intensite_intense");
+		VariableUtile.boutonFiltreIntensiteIntense = boutonFiltre(2, 57, "Intensite_intense");
 		VariableUtile.boutonFiltreIntensiteIntense.finirGenerationBoutonFiltre("Intense");
 
-		VariableUtile.textFiltreTechnique = new Text(VariableUtile.px * 10, VariableUtile.py * 14, "Technique");
-		VariableUtile.textFiltreTechnique.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.textFiltreTechnique.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.textFiltreTechnique.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.textFiltreTechnique.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.textFiltreTechnique.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.textFiltreTechnique.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.textFiltreTechnique);
-		Platform.runLater(() -> {
-			VariableUtile.root.getChildren().add(VariableUtile.textFiltreTechnique);
-		});
-
-		VariableUtile.boutonFiltreTechniqueFaible = new Bouton(VariableUtile.px * 11, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_faible");
+		VariableUtile.textFiltreTechnique = titreFiltre("Technique", 10, 14, 9);
+		VariableUtile.boutonFiltreTechniqueFaible = boutonFiltre(11, 17, "Technique_faible");
 		VariableUtile.boutonFiltreTechniqueFaible.finirGenerationBoutonFiltre("Faible");
-
-		VariableUtile.boutonFiltreTechniqueModeree = new Bouton(VariableUtile.px * 11, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_moderee");
+		VariableUtile.boutonFiltreTechniqueModeree = boutonFiltre(11, 37, "Technique_moderee");
 		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("Modérée");
-
-		VariableUtile.boutonFiltreTechniqueIntense = new Bouton(VariableUtile.px * 11, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Technique_elevee");
+		VariableUtile.boutonFiltreTechniqueIntense = boutonFiltre(11, 57, "Technique_elevee");
 		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("Elevée");
 
-		// Filtres genre -- Opacité paint.net 150
-		VariableUtile.texteFiltreGenre = new Text(VariableUtile.px * 35, VariableUtile.py * 14, "Genre");
-		VariableUtile.texteFiltreGenre.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.texteFiltreGenre.setWrappingWidth(VariableUtile.px * 9);
-		VariableUtile.texteFiltreGenre.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.texteFiltreGenre.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.texteFiltreGenre.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.texteFiltreGenre.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreGenre);
-		Platform.runLater(() -> {
-			VariableUtile.root.getChildren().add(VariableUtile.texteFiltreGenre);
-		});
-
-		VariableUtile.boutonFiltreSportif = new Bouton(VariableUtile.px * 25, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Sportif");
+		VariableUtile.texteFiltreGenre = titreFiltre("Genre", 35, 14, 9);
+		VariableUtile.boutonFiltreSportif = boutonFiltre(25, 17, "Sportif");
 		VariableUtile.boutonFiltreSportif.finirGenerationBoutonFiltre(null, Genre.Sportif);
-
-		VariableUtile.boutonFiltreElectro = new Bouton(VariableUtile.px * 25, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Electro");
+		VariableUtile.boutonFiltreElectro = boutonFiltre(25, 37, "Electro");
 		VariableUtile.boutonFiltreElectro.finirGenerationBoutonFiltre(null, Genre.Electro);
-
-		VariableUtile.boutonFiltreLatino = new Bouton(VariableUtile.px * 25, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Latino");
+		VariableUtile.boutonFiltreLatino = boutonFiltre(25, 57, "Latino");
 		VariableUtile.boutonFiltreLatino.finirGenerationBoutonFiltre(null, Genre.Latino);
-
-		VariableUtile.boutonFiltreFolklore = new Bouton(VariableUtile.px * 36, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Folklore");
+		VariableUtile.boutonFiltreFolklore = boutonFiltre(36, 17, "Folklore");
 		VariableUtile.boutonFiltreFolklore.finirGenerationBoutonFiltre("Folk", Genre.Folklore);
-
-		VariableUtile.boutonFiltreRandB = new Bouton(VariableUtile.px * 36, VariableUtile.py * 37,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "RandB");
+		VariableUtile.boutonFiltreRandB = boutonFiltre(36, 37, "RandB");
 		VariableUtile.boutonFiltreRandB.finirGenerationBoutonFiltre("R&B", Genre.RandB);
-
-		VariableUtile.boutonFiltreRock = new Bouton(VariableUtile.px * 36, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Rock");
+		VariableUtile.boutonFiltreRock = boutonFiltre(36, 57, "Rock");
 		VariableUtile.boutonFiltreRock.finirGenerationBoutonFiltre(null, Genre.Rock);
-
-		VariableUtile.boutonFiltreRetro = new Bouton(VariableUtile.px * 47, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Retro");
+		VariableUtile.boutonFiltreRetro = boutonFiltre(47, 17, "Retro");
 		VariableUtile.boutonFiltreRetro.finirGenerationBoutonFiltre("Retro", Genre.Retro);
-
-		VariableUtile.boutonFiltrePop = new Bouton(VariableUtile.px * 47, VariableUtile.py * 37, VariableUtile.px * 6.8,
-				VariableUtile.px * 7, 25, "Pop");
+		VariableUtile.boutonFiltrePop = boutonFiltre(47, 37, "Pop");
 		VariableUtile.boutonFiltrePop.finirGenerationBoutonFiltre("Pop", Genre.Pop);
-
-		VariableUtile.boutonFiltreJazzy = new Bouton(VariableUtile.px * 47, VariableUtile.py * 57,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Jazzy");
+		VariableUtile.boutonFiltreJazzy = boutonFiltre(47, 57, "Jazzy");
 		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
 
-		// Filtres nombre de danseurs -- Opacité paint.net 160
-		VariableUtile.texteFiltreNbDanseurs = new Text(VariableUtile.px * 61, VariableUtile.py * 14,
-				"Nombre de danseurs");
-		VariableUtile.texteFiltreNbDanseurs.setFont(new Font(VariableUtile.police, VariableUtile.py * 3));
-		VariableUtile.texteFiltreNbDanseurs.setWrappingWidth(VariableUtile.px * 32);
-		VariableUtile.texteFiltreNbDanseurs.setTextAlignment(TextAlignment.CENTER);
-		VariableUtile.texteFiltreNbDanseurs.setFill(VariableUtile.couleur1.brighter().brighter().brighter().brighter());
-		VariableUtile.texteFiltreNbDanseurs.setEffect(VariableUtile.effetTextPage);
-		VariableUtile.texteFiltreNbDanseurs.setVisible(false);
-		VariableUtile.textesFiltres.add(VariableUtile.texteFiltreNbDanseurs);
-		Platform.runLater(() -> {
-			VariableUtile.root.getChildren().add(VariableUtile.texteFiltreNbDanseurs);
-		});
-
-		VariableUtile.boutonFiltre1Danseur = new Bouton(VariableUtile.px * 61, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "UnDanseur");
+		VariableUtile.texteFiltreNbDanseurs = titreFiltre("Nombre de danseurs", 61, 14, 32);
+		VariableUtile.boutonFiltre1Danseur = boutonFiltre(61, 17, "UnDanseur");
 		VariableUtile.boutonFiltre1Danseur.finirGenerationBoutonFiltre("Un", 1);
-
-		VariableUtile.boutonFiltre2Danseurs = new Bouton(VariableUtile.px * 70, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "DeuxDanseurs");
+		VariableUtile.boutonFiltre2Danseurs = boutonFiltre(70, 17, "DeuxDanseurs");
 		VariableUtile.boutonFiltre2Danseurs.finirGenerationBoutonFiltre("Deux", 2);
-
-		VariableUtile.boutonFiltre3Danseurs = new Bouton(VariableUtile.px * 79, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "TroisDanseurs");
+		VariableUtile.boutonFiltre3Danseurs = boutonFiltre(79, 17, "TroisDanseurs");
 		VariableUtile.boutonFiltre3Danseurs.finirGenerationBoutonFiltre("Trois", 3);
-
-		VariableUtile.boutonFiltre4Danseurs = new Bouton(VariableUtile.px * 88, VariableUtile.py * 17,
-				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "QuatreDanseurs");
+		VariableUtile.boutonFiltre4Danseurs = boutonFiltre(88, 17, "QuatreDanseurs");
 		VariableUtile.boutonFiltre4Danseurs.finirGenerationBoutonFiltre("Quatre +", 4);
 	}
 
@@ -752,7 +658,9 @@ public class MainDanse extends Application {
 			ordreActuel++;
 		}
 
-		if (!VariableUtile.modeFiltre && !VariableUtile.modeFiltre) {
+		// (corrigé : on testait deux fois modeFiltre et jamais modeTri, donc taper dans
+		// la barre de recherche pendant l'écran de tri faisait quitter cet écran)
+		if (!VariableUtile.modeFiltre && !VariableUtile.modeTri) {
 			VariableUtile.cacherMenuTri();
 			VariableUtile.cacherMenuFiltres();
 			if (!VariableUtile.modeSelection) {
@@ -768,37 +676,48 @@ public class MainDanse extends Application {
 	}
 
 	private void completerDanses() {
-		Scanner scanner = null;
 		int ordreAjout = 1;
-		try {
-			scanner = new Scanner(VariableUtile.fichierInfosDanses, "UTF-8");
+		int ignorees = 0;
+		File fichier = VariableUtile.fichierInfosDanses;
+		if (fichier == null || !fichier.exists()) {
+			afficherErreur("Impossible d'ouvrir le fichier " + fichier);
+			return;
+		}
+		try (Scanner scanner = new Scanner(fichier, "UTF-8")) {
+			int numeroLigne = 0;
 			while (scanner.hasNextLine()) {
-				String[] infosStr = scanner.nextLine().split("\\|");
-				String titreMusique = infosStr[0];
+				numeroLigne++;
+				String ligne = scanner.nextLine();
+				try {
+					String[] infosStr = ligne.split("\\|");
+					String titreMusique = infosStr[0];
 
-				if (VariableUtile.danses.containsKey(titreMusique)) {
-					Danse danseACompleter = VariableUtile.danses.get(titreMusique);
-					String listeIdArtistes[] = infosStr[1].split("-");
-					danseACompleter.ordreAjout = ordreAjout;
-					for (int i = 0; i < listeIdArtistes.length; i++) {
-						String artiste = VariableUtile.artistes.get(Integer.valueOf(listeIdArtistes[i]));
-						danseACompleter.artistes.add(artiste);
+					if (VariableUtile.danses.containsKey(titreMusique)) {
+						Danse danseACompleter = VariableUtile.danses.get(titreMusique);
+						String listeIdArtistes[] = infosStr[1].split("-");
+						danseACompleter.ordreAjout = ordreAjout;
+						for (int i = 0; i < listeIdArtistes.length; i++) {
+							String artiste = VariableUtile.artistes.get(Integer.valueOf(listeIdArtistes[i]));
+							danseACompleter.artistes.add(artiste);
+						}
+						danseACompleter.intensite = Integer.valueOf(infosStr[2]);
+						danseACompleter.technique = Integer.valueOf(infosStr[3]);
+						String couleur1[] = infosStr[4].split("-");
+						String couleur2[] = infosStr[5].split("-");
+						danseACompleter.couleur1 = Color.rgb(Integer.valueOf(couleur1[0]), Integer.valueOf(couleur1[1]),
+								Integer.valueOf(couleur1[2]));
+						danseACompleter.couleur2 = Color.rgb(Integer.valueOf(couleur2[0]), Integer.valueOf(couleur2[1]),
+								Integer.valueOf(couleur2[2]));
+						danseACompleter.unlimited = Boolean.valueOf(infosStr[6]);
+						String listeGenreStr[] = infosStr[7].split("-");
+						for (int i = 0; i < listeGenreStr.length; i++) {
+							danseACompleter.genres.add(Genre.valueOf(listeGenreStr[i]));
+						}
 					}
-					danseACompleter.intensite = Integer.valueOf(infosStr[2]);
-					danseACompleter.technique = Integer.valueOf(infosStr[3]);
-					String couleur1Str = infosStr[4];
-					String couleur2Str = infosStr[5];
-					String couleur1[] = couleur1Str.split("-");
-					String couleur2[] = couleur2Str.split("-");
-					danseACompleter.couleur1 = Color.rgb(Integer.valueOf(couleur1[0]), Integer.valueOf(couleur1[1]),
-							Integer.valueOf(couleur1[2]));
-					danseACompleter.couleur2 = Color.rgb(Integer.valueOf(couleur2[0]), Integer.valueOf(couleur2[1]),
-							Integer.valueOf(couleur2[2]));
-					danseACompleter.unlimited = Boolean.valueOf(infosStr[6]);
-					String listeGenreStr[] = infosStr[7].split("-");
-					for (int i = 0; i < listeGenreStr.length; i++) {
-						danseACompleter.genres.add(Genre.valueOf(listeGenreStr[i]));
-					}
+				} catch (Exception e) {
+					// une ligne invalide n'empêche plus de lire les suivantes
+					ignorees++;
+					Diagnostic.log("Ligne " + numeroLigne + " ignorée dans " + fichier.getName() + " : " + e);
 				}
 				ordreAjout++;
 			}
@@ -808,52 +727,36 @@ public class MainDanse extends Application {
 					ordreAjout++;
 				}
 			}
-		} catch (FileNotFoundException e) {
-			afficherErreur("Impossible d'ouvrir le fichier " + VariableUtile.fichierInfosDanses + " " + e);
-		} catch (Exception e) {
-			afficherErreur("Erreur pendant la récupération des infos danse ligne " + ordreAjout + " " + e);
-			e.printStackTrace();
-		} finally {
-			scanner.close();
+		} catch (IOException e) {
+			afficherErreur("Impossible d'ouvrir le fichier " + fichier + " " + e);
+		}
+		if (ignorees > 0) {
+			afficherErreur(ignorees + " ligne(s) invalide(s) ignorée(s) dans " + fichier.getName()
+					+ " (détail dans danse.log)");
 		}
 	}
 
 	private void importerConfig() {
-		String nomFichierConfig = "Config.txt";
-		try {
-			// Tente de localiser le fichier via la classe elle-même
-			String path = MainDanse.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-
-			// Cas rsrc: ou autre URI non hiérarchique
-			if (path == null || path.isEmpty() || path.startsWith("rsrc")) {
-				// Utilise le répertoire courant en dernier recours
-				path = new File(".").getAbsolutePath();
-			}
-
-			File dossier = new File(path).getParentFile();
-			File fichierConfig = new File(dossier, "Config.txt");
-
-			if (!fichierConfig.exists()) {
-				throw new FileNotFoundException(
-						"Fichier Config.txt introuvable à : " + fichierConfig.getAbsolutePath());
-			}
-
-			Scanner scanner;
-			scanner = new Scanner(fichierConfig);
-			VariableUtile.dossierDanses = new File(scanner.nextLine());
-			VariableUtile.dossierImagesDanses = new File(scanner.nextLine());
-			VariableUtile.dossierImports = new File(scanner.nextLine());
-			VariableUtile.fichierInfosDanses = new File(scanner.nextLine());
-
-			scanner.close();
-		} catch (FileNotFoundException | URISyntaxException e) {
-			afficherErreur("Impossible d'ouvrir le fichier " + nomFichierConfig + " " + e);
+		File fichierConfig = new File(Diagnostic.dossierApp(), "Config.txt");
+		if (!fichierConfig.exists()) {
+			afficherErreur("Fichier Config.txt introuvable à : " + fichierConfig.getAbsolutePath());
+			return;
+		}
+		try (Scanner scanner = new Scanner(fichierConfig, "UTF-8")) {
+			VariableUtile.dossierDanses = new File(scanner.nextLine().trim());
+			VariableUtile.dossierImagesDanses = new File(scanner.nextLine().trim());
+			VariableUtile.dossierImports = new File(scanner.nextLine().trim());
+			VariableUtile.fichierInfosDanses = new File(scanner.nextLine().trim());
+		} catch (Exception e) {
+			Diagnostic.log("Config.txt illisible", e);
+			afficherErreur("Impossible de lire Config.txt (4 lignes attendues) : " + e);
+			VariableUtile.dossierDanses = null;
 		}
 	}
 
 	private void importerTitresVideosDanses() {
-		try {
-			Files.list(VariableUtile.dossierDanses.toPath()).limit(5000).forEach(path -> {
+		try (Stream<java.nio.file.Path> flux = Files.list(VariableUtile.dossierDanses.toPath())) {
+			flux.limit(5000).forEach(path -> {
 				File fichierDanse = path.toFile();
 				String nomCompletDanse = fichierDanse.getName();
 				String titreMusique;
@@ -885,16 +788,17 @@ public class MainDanse extends Application {
 	}
 
 	private void importerListeArtistes() {
-		File fichierArtistes = new File(VariableUtile.dossierImports + "\\artistes.txt");
-		try {
-			Scanner scanner;
-			scanner = new Scanner(fichierArtistes);
+		File fichierArtistes = new File(VariableUtile.dossierImports, "artistes.txt");
+		try (Scanner scanner = new Scanner(fichierArtistes, "UTF-8")) {
 			while (scanner.hasNextLine()) {
 				String[] artisteStr = scanner.nextLine().split("\\|");
-				VariableUtile.artistes.put(Integer.valueOf(artisteStr[0]), artisteStr[1]);
+				try {
+					VariableUtile.artistes.put(Integer.valueOf(artisteStr[0]), artisteStr[1]);
+				} catch (Exception e) {
+					Diagnostic.log("Ligne d'artiste ignorée : " + String.join("|", artisteStr));
+				}
 			}
-			scanner.close();
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			afficherErreur("Impossible d'ouvrir le fichier " + fichierArtistes + " " + e);
 		}
 	}
@@ -909,18 +813,15 @@ public class MainDanse extends Application {
 			for (Bouton bouton : VariableUtile.boutonsDanse) {
 				bouton.setVisible(false);
 				if (bouton.changerDanseBouton != null) {
-					Platform.runLater(() -> {
-						VariableUtile.root.getChildren().remove(bouton.changerDanseBouton);
-					});
+					VariableUtile.root.getChildren().remove(bouton.changerDanseBouton);
 				}
-				Platform.runLater(() -> {
-					VariableUtile.root.getChildren().remove(bouton);
-				});
+				VariableUtile.root.getChildren().remove(bouton);
 			}
 			VariableUtile.boutonsDanse.clear();
 		}
 		ArrayList<Danse> dansesAafficher = modeSelection ? VariableUtile.dansesSelectionnees
 				: VariableUtile.dansesFiltrees;
+		ArrayList<Danse> affichees = new ArrayList<>();
 
 		for (int i = 0; i < 6; i++) {
 			int numeroDanse = modeSelection ? i : i + 6 * VariableUtile.page;
@@ -930,16 +831,12 @@ public class MainDanse extends Application {
 						: VariableUtile.px * i * 20 + VariableUtile.px * 15;
 				double hauteurPositionBouton = i > 2 ? VariableUtile.py * 60 : VariableUtile.py * 22;
 				Danse danse = dansesAafficher.get(numeroDanse);
+				affichees.add(danse);
 				Bouton boutonDanse = new Bouton(largeurPositionBouton, hauteurPositionBouton, VariableUtile.px * 17,
-						VariableUtile.py * 33, 20, danse, modeSelection ? true : false, i);
+						VariableUtile.py * 33, 20, danse, modeSelection, i);
 				if (danse.imageDanse1 == null) {
-					Thread threadChargement = new Thread() {
-						public void run() {
-							danse.importerImages();
-							boutonDanse.imageViewBouton.setImage(danse.imageDanse1);
-						}
-					};
-					threadChargement.start();
+					// chargement en arrière-plan, image posée ensuite sur le thread JavaFX
+					danse.importerImagesAsync(boutonDanse::rafraichirImage);
 				}
 
 				if (!visible) {
@@ -947,9 +844,12 @@ public class MainDanse extends Application {
 				}
 
 				VariableUtile.boutonsDanse.add(boutonDanse);
-
 			}
 		}
+		if (VariableUtile.boutonSuggestion != null) {
+			affichees.add(VariableUtile.boutonSuggestion.danse);
+		}
+		Danse.limiterMemoire(affichees);
 	}
 
 	public static void decompte(String nombre) {
@@ -984,12 +884,12 @@ public class MainDanse extends Application {
 			}
 		}
 		// Barre de recherche
-		if (VariableUtile.barreRecherche.text.getText().length() > 0) {
+		String recherche = VariableUtile.barreRecherche.text.getText().toUpperCase();
+		if (recherche.length() > 0) {
 			ArrayList<Danse> dansesRecherche = new ArrayList<>();
 			for (Danse danse : VariableUtile.dansesFiltrees) {
-				if (danse.titreMusique.toUpperCase().contains(VariableUtile.barreRecherche.text.getText().toUpperCase())
-						|| danse.artistes.toString().toUpperCase()
-								.contains(VariableUtile.barreRecherche.text.getText().toUpperCase())) {
+				if (danse.titreMusique.toUpperCase().contains(recherche)
+						|| danse.artistes.toString().toUpperCase().contains(recherche)) {
 					dansesRecherche.add(danse);
 				}
 			}
@@ -999,6 +899,7 @@ public class MainDanse extends Application {
 		try {
 			validerTri();
 		} catch (Exception e) {
+			Diagnostic.log("Erreur validerTri", e);
 			MainDanse.afficherErreur("Erreur validerTri : " + e.getMessage());
 		}
 	}
@@ -1016,11 +917,7 @@ public class MainDanse extends Application {
 				}
 			}
 		}
-		if (tousFiltresGenreActifs) {
-			return true;
-		} else {
-			return false;
-		}
+		return tousFiltresGenreActifs;
 	}
 
 	protected boolean aAuMoinsUnNbDanseursActive(Danse danse) {
@@ -1048,11 +945,7 @@ public class MainDanse extends Application {
 				}
 			}
 		}
-		if (tousFiltresNbActifs) {
-			return true;
-		} else {
-			return false;
-		}
+		return tousFiltresNbActifs;
 	}
 
 	public static boolean sauterDansesVides() {
@@ -1069,11 +962,11 @@ public class MainDanse extends Application {
 		return !tousVides;
 	}
 
+	/** Conservé pour compatibilité : la couleur du fond est gérée par le thème. */
 	public static void actualiserCouleurPrincipal() {
-		VariableUtile.shadePaint = new RadialGradient(0.5, 0.5, 0, 0, 1, true, CycleMethod.NO_CYCLE,
-				new Stop(1, VariableUtile.couleur1), new Stop(0, VariableUtile.couleur2));
-
-		VariableUtile.scene.setFill(VariableUtile.shadePaint);
+		if (VariableUtile.danseSelectionnee != null) {
+			Theme.changerAmbiance(Theme.accentDe(VariableUtile.danseSelectionnee));
+		}
 	}
 
 	public Image importerImage(String imageURI) {
@@ -1090,13 +983,14 @@ public class MainDanse extends Application {
 		}
 	}
 
+	/**
+	 * Affiche une erreur SANS fenêtre modale (une boîte Alert modale ouverte
+	 * derrière la fenêtre plein écran bloquait toute l'interface sans rien
+	 * montrer). L'erreur est écrite dans danse.log et affichée brièvement.
+	 */
 	public static void afficherErreur(String message) {
-		System.out.println(message);
-		Platform.runLater(() -> {
-			Alert a = new Alert(AlertType.ERROR);
-			a.setContentText(message);
-			a.show();
-		});
+		Diagnostic.log("ERREUR : " + message);
+		Theme.toast(message);
 	}
 
 	public static void main(String[] args) {
@@ -1105,23 +999,23 @@ public class MainDanse extends Application {
 
 	@Override
 	public void stop() {
+		Diagnostic.log("Arrêt de l'application");
+		Platform.runLater(() -> {
+		});
+		annulerDecompte();
+		try {
+			VariableUtile.stoperMelange();
+		} catch (Exception e) {
+			Diagnostic.log("stoperMelange à la fermeture", e);
+		}
 		if (VariableUtile.lecteurAudio != null) {
-			VariableUtile.lecteurAudio.arreter();
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			VariableUtile.lecteurAudio.liberer();
 		}
 		if (VariableUtile.lecteurVLCJ != null) {
-			VariableUtile.lecteurVLCJ.arreter();
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			VariableUtile.lecteurVLCJ.liberer();
+		}
+		if (mediaPlayerCompteur != null) {
+			mediaPlayerCompteur.dispose();
 		}
 		System.exit(0);
 	}

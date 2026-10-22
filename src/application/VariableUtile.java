@@ -1,15 +1,13 @@
 package application;
 
-import java.awt.MouseInfo;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javafx.animation.PauseTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -118,13 +116,21 @@ public class VariableUtile {
 	public static int volumeRecommande = 100;
 	public static ImageView imageViewDanseEchangeSelection;
 	public static Bouton boutonGlissePourEchangeSelection;
-	public static ArrayList<MediaView> mediaViewsMelange;
-	public static ArrayList<MediaPlayer> playerVideosMelange;
+	public static ArrayList<MediaView> mediaViewsMelange = new ArrayList<>();
+	public static ArrayList<MediaPlayer> playerVideosMelange = new ArrayList<>();
+	public static Timeline timelineMelange;
+	private static Timeline veille;
+	private static Robot robot;
+	private static int sensVeille = 1;
 	public static ArrayList<Danse> dansesSelectionnees;
-	public static String police = "Arial Rounded MT Bold"; // Constantia
+	public static String police = "Segoe UI"; // voir Theme.famille
 	public static BarreRecherche barreRecherche;
 
 	public static Text textCompteur;
+
+	public static int nbPages() {
+		return Math.max(1, (int) Math.ceil(dansesFiltrees.size() / 6.0));
+	}
 
 	public static void genererTextPage() {
 		if (textPage != null) {
@@ -132,10 +138,8 @@ public class VariableUtile {
 			if (danseSelectionnee != null) {
 				numDanseSelectionne = danseSelectionnee.ordreActuel;
 			}
-			textPage.setText("Danse " + numDanseSelectionne + "/" + dansesFiltrees.size() + " - Page " + (page + 1)
-					+ "/" + (int) Math.ceil(dansesFiltrees.size() / 6 + 1));
-			textPage.setFill(couleur1.brighter().brighter().brighter().brighter());
-			effetTextPage.setColor(VariableUtile.couleur1.invert());
+			textPage.setText("Danse " + numDanseSelectionne + "/" + dansesFiltrees.size() + " - Page " + (page + 1) + "/"
+					+ nbPages());
 		}
 	}
 
@@ -149,91 +153,115 @@ public class VariableUtile {
 				}
 			});
 		}
-		if (dansesFiltrees.size() > 0) {
-			Platform.runLater(() -> {
-				if (dansesFiltrees.size() > 0) {
-					int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
-					Danse danse = dansesFiltrees.get(aleaSuggestion - 1);
-					if (danse.imageDanse1 == null) {
-						danse.importerImages();
-					}
-					boutonSuggestion = new Bouton(px * 80, py * 4, px * 17, py * 33, 20, danse, false, 6);
-					boutonSuggestion.genererSuperTitre("Suggestion");
-					boutonsMenu.add(boutonSuggestion);
+		Platform.runLater(() -> {
+			if (dansesFiltrees.size() > 0) {
+				int aleaSuggestion = (int) Math.ceil(Math.random() * dansesFiltrees.size());
+				Danse danse = dansesFiltrees.get(aleaSuggestion - 1);
+				Bouton nouvelle = new Bouton(px * 79.5, py * 4, px * 18, py * 33, 20, danse, false, 6);
+				boutonSuggestion = nouvelle;
+				nouvelle.genererSuperTitre("Suggestion");
+				boutonsMenu.add(nouvelle);
+				// la suggestion n'est visible que si le menu principal l'est
+				nouvelle.setVisible(!boutonsDanse.isEmpty() && boutonsDanse.get(0).isVisible());
+				if (danse.imageDanse1 == null) {
+					danse.importerImagesAsync(() -> {
+						nouvelle.rafraichirImage();
+						definirIconeFenetre(danse);
+					});
+				} else {
+					definirIconeFenetre(danse);
 				}
-			});
+			}
+		});
+	}
+
+	private static boolean iconeDefinie = false;
+
+	private static void definirIconeFenetre(Danse danse) {
+		if (!iconeDefinie && danse.imageDanse2 != null) {
+			iconeDefinie = true;
+			primaryStage.getIcons().add(danse.imageDanse2);
 		}
 	}
 
 	public static void formerNombreCompteur(String nombre) {
 		textCompteur.setText(nombre);
-		textCompteur.setFill(couleur1.brighter().brighter().brighter().brighter());
 	}
 
-	public static void lancerSon(Danse danse) {
-		try {
-			String cheminComplet = new File(dossierDanses + "\\" + danse.nomVideo).getAbsolutePath();
-			lecteurAudio.chargerMedia(cheminComplet);
-		} catch (Exception e) {
-			MainDanse.afficherErreur(
-					"Impossible d'ouvrir la vidéo " + VariableUtile.dossierDanses + danse.nomVideo + " " + e);
+	/** Extrait musical au survol d'une danse (asynchrone, jamais bloquant). */
+	public static void apercuMusique(Danse danse) {
+		if (lecteurAudio == null) {
+			return;
 		}
+		if (danse.equals(danseNeant) || modeMelange) {
+			lecteurAudio.arreter();
+			return;
+		}
+		lecteurAudio.apercu(fichierVideo(danse), 20, 20);
+	}
+
+	public static File fichierVideo(Danse danse) {
+		return new File(dossierDanses, danse.nomVideo);
+	}
+
+	public static boolean actionsVisibles() {
+		for (Bouton b : boutonsAction) {
+			if (b != null && b.isVisible()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Vrai quand l'utilisateur est sur un écran de menu (et pas devant une vidéo). */
+	public static boolean ecranMenuActif() {
+		return !(videoEnCours || modeMelange || lecteurVLCJ.estEnLecture() || lecteurVLCJ.estEnPause()
+				|| lecteurVLCJ.estEnPleinEcran || actionsVisibles());
 	}
 
 	public static void lancerVideo(Danse danse) {
-		VariableUtile.lecteurVLCJ.arreter();
+		if (!fichierVideo(danse).exists()) {
+			MainDanse.afficherErreur("Vidéo introuvable : " + fichierVideo(danse));
+			return;
+		}
+		MainDanse.annulerDecompte();
+		lecteurVLCJ.arreter();
 
-		File videoDanse = new File(VariableUtile.dossierDanses + "\\" + danse.nomVideo);
+		File videoDanse = fichierVideo(danse);
 
-		// Retirer l'ancienne vue si elle existe
-		VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ.imageView);
+		lecteurVLCJ.estEnPleinEcran = true;
+		primaryStage.setFullScreen(true);
+		lecteurVLCJ.imageView.fitWidthProperty().bind(scene.widthProperty());
+		lecteurVLCJ.imageView.fitHeightProperty().bind(scene.heightProperty());
+		if (!root.getChildren().contains(lecteurVLCJ.imageView)) {
+			root.getChildren().add(lecteurVLCJ.imageView);
+		}
+		lecteurVLCJ.imageView.toFront();
 
-		// Ajouter la nouvelle vue
-		VariableUtile.lecteurVLCJ.estEnPleinEcran = true;
-		VariableUtile.primaryStage.setFullScreen(true);
-		VariableUtile.lecteurVLCJ.imageView.fitWidthProperty().bind(VariableUtile.scene.widthProperty());
-		VariableUtile.lecteurVLCJ.imageView.fitHeightProperty().bind(VariableUtile.scene.heightProperty());
-		Platform.runLater(() -> VariableUtile.root.getChildren().add(VariableUtile.lecteurVLCJ.imageView));
+		lecteurVLCJ.setOnVideoFinished(() -> actionVideoTerminee());
 
-		VariableUtile.lecteurVLCJ.setOnVideoFinished(() -> {
-			Platform.runLater(() -> {
-				actionVideoTerminee();
-			});
-		});
-
-		VariableUtile.lecteurVLCJ.imageView.setVisible(true);
-		VariableUtile.lecteurVLCJ.demarrer(videoDanse);
-
-		PauseTransition pause = new PauseTransition(Duration.seconds(120));
-		pause.setOnFinished(e -> mouvSourisVsVeuille());
-		pause.play();
+		lecteurVLCJ.imageView.setVisible(true);
+		lecteurVLCJ.demarrer(videoDanse);
 
 		cacherMenuPrincipal();
-//		afficherBarreAction();
-		if (VariableUtile.modeSelection)
+		if (modeSelection) {
 			cacherEcranSelection();
+		}
+		Theme.afficherFond(false);
 
-		VariableUtile.videoEnCours = true;
-		VariableUtile.scene.setCursor(Cursor.NONE);
+		videoEnCours = true;
+		scene.setCursor(Cursor.NONE);
 	}
 
 	private static void actionVideoTerminee() {
 		mouvSourisVsVeuille();
-
-//		if (VariableUtile.modeIllimite) {
-//			Platform.runLater(() -> {
-//				VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ);
-//				VariableUtile.lancerVideoAuHasard();
-//			});
-//		}
-		if (VariableUtile.modeSelection) {
-			// Platform.runLater(() -> {
-//			VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-			// });
+		if (modeSelection) {
 			numeroProchaineDanseSelection++;
 			if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
 				if (MainDanse.sauterDansesVides()) {
-					VariableUtile.lancerVideo(dansesSelectionnees.get(numeroProchaineDanseSelection));
+					lancerVideo(dansesSelectionnees.get(numeroProchaineDanseSelection));
+				} else {
+					finSelection();
 				}
 			} else {
 				finSelection();
@@ -241,173 +269,187 @@ public class VariableUtile {
 		}
 	}
 
-	public static void mouvSourisVsVeuille() {
-		// Mouvement de souris pour empécher la veille
-		Robot hal = null;
-		try {
-			hal = new Robot();
-		} catch (Exception e) {
-			MainDanse.afficherErreur("Echec de la génération du robot de mouvement de souris : " + e);
+	/** Empêche la mise en veille pendant une vidéo (une seule minuterie pour toute l'appli). */
+	public static void demarrerAntiVeille() {
+		if (veille == null) {
+			veille = new Timeline(new KeyFrame(Duration.seconds(100), e -> {
+				if (videoEnCours || modeMelange) {
+					mouvSourisVsVeuille();
+				}
+			}));
+			veille.setCycleCount(Timeline.INDEFINITE);
+			veille.play();
 		}
-		hal.mouseMove((int) (MouseInfo.getPointerInfo().getLocation().getX()) + 1,
-				(int) (MouseInfo.getPointerInfo().getLocation().getY()) + 1);
+	}
+
+	public static void mouvSourisVsVeuille() {
+		// Micro-mouvement de souris, alternativement +1 / -1 pour ne pas dériver
+		try {
+			if (robot == null) {
+				robot = new Robot();
+			}
+			sensVeille = -sensVeille;
+			robot.mouseMove(robot.getMouseX() + sensVeille, robot.getMouseY());
+		} catch (Exception e) {
+			Diagnostic.log("Anti-veille impossible", e);
+		}
 	}
 
 	public static void quitterPleinEcran() {
-		VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
-		VariableUtile.scene.setCursor(Cursor.DEFAULT);
-		VariableUtile.videoEnCours = false;
-		VariableUtile.afficherBarreAction();
+		lecteurVLCJ.estEnPleinEcran = false;
+		scene.setCursor(Cursor.DEFAULT);
+		videoEnCours = false;
+		afficherBarreAction();
 	}
 
 	public static void lancerVideoAuHasard() {
+		if (dansesFiltrees.isEmpty()) {
+			MainDanse.afficherErreur("Aucune danse ne correspond aux filtres.");
+			return;
+		}
 		int aleaVideo = (int) Math.ceil(Math.random() * dansesFiltrees.size());
 		lancerVideo(dansesFiltrees.get(aleaVideo - 1));
 	}
 
+	// ------------------------------------------------------------------ mélange
+
 	public static void lancerMelange() {
-		// Arrêt de la musique
-		if (VariableUtile.lecteurAudio != null) {
-			VariableUtile.lecteurAudio.arreter();
+		if (dansesFiltrees.isEmpty()) {
+			MainDanse.afficherErreur("Aucune danse ne correspond aux filtres.");
+			return;
 		}
-		VariableUtile.modeMelange = true;
+		MainDanse.annulerDecompte();
+		stoperMelange();
+		// Arrêt de la musique
+		if (lecteurAudio != null) {
+			lecteurAudio.arreter();
+		}
+		modeMelange = true;
 
 		cacherMenuPrincipal();
 		afficherBarreAction();
+		Theme.afficherFond(false);
 
-		VariableUtile.videoEnCours = true;
-		VariableUtile.scene.setCursor(Cursor.NONE);
+		videoEnCours = true;
+		scene.setCursor(Cursor.NONE);
+		lecteurVLCJ.estEnPleinEcran = true;
+		primaryStage.setFullScreen(true);
 
 		ArrayList<Integer> musiquesDejaChoisiees = new ArrayList<Integer>();
-		VariableUtile.mediaViewsMelange = new ArrayList<MediaView>();
-		VariableUtile.playerVideosMelange = new ArrayList<MediaPlayer>();
+		timelineMelange = new Timeline();
 		for (int i = 1; i < 7; i++) {
-
 			int aleaVideo;
 			do {
 				aleaVideo = (int) Math.ceil(Math.random() * dansesFiltrees.size());
 			} while (musiquesDejaChoisiees.contains(aleaVideo) && dansesFiltrees.size() >= i);
 			musiquesDejaChoisiees.add(aleaVideo);
 
-			MediaPlayer playerVideoMelange = null;
+			Danse danse = dansesFiltrees.get(aleaVideo - 1);
+			MediaPlayer playerVideoMelange;
 			try {
-				playerVideoMelange = new MediaPlayer(new Media(
-						new File(VariableUtile.dossierDanses + "\\" + dansesFiltrees.get(aleaVideo - 1).nomVideo)
-								.toURI().toURL().toExternalForm()));
-			} catch (MalformedURLException e) {
-				MainDanse
-						.afficherErreur("Impossible de charger la vidéo " + dansesFiltrees.get(aleaVideo - 1).nomVideo);
+				playerVideoMelange = new MediaPlayer(new Media(fichierVideo(danse).toURI().toURL().toExternalForm()));
+			} catch (Exception e) {
+				MainDanse.afficherErreur("Impossible de charger la vidéo " + danse.nomVideo);
+				continue;
 			}
-			System.out.println(dansesFiltrees.get(aleaVideo - 1).nomVideo + " n°" + i);
 			MediaView mediaViewMelange = new MediaView(playerVideoMelange);
-			Platform.runLater(() -> {
-				VariableUtile.root.getChildren().add(mediaViewMelange);
-			});
 			mediaViewMelange.setVisible(false);
-			VariableUtile.lecteurVLCJ.estEnPleinEcran = true;
-			VariableUtile.primaryStage.setFullScreen(true);
-			VariableUtile.mediaViewsMelange.add(mediaViewMelange);
-			VariableUtile.playerVideosMelange.add(playerVideoMelange);
+			mediaViewMelange.fitWidthProperty().bind(scene.widthProperty());
+			mediaViewMelange.fitHeightProperty().bind(scene.heightProperty());
+			root.getChildren().add(mediaViewMelange);
+			mediaViewsMelange.add(mediaViewMelange);
+			playerVideosMelange.add(playerVideoMelange);
 
-			lancerMusiqueDeMelange(playerVideoMelange, mediaViewMelange, i);
+			final int morceauJoue = i;
+			timelineMelange.getKeyFrames().add(new KeyFrame(Duration.seconds(35.0 * (i - 1)),
+					e -> lancerMorceauDeMelange(playerVideoMelange, mediaViewMelange, morceauJoue)));
 		}
+		timelineMelange.play();
 	}
 
-	public static void lancerMusiqueDeMelange(MediaPlayer playerVideoMelange, MediaView mediaViewMelange,
-			int morceauJoue) {
-
-		new java.util.Timer().schedule(new java.util.TimerTask() {
-			@Override
-			public void run() {
-				// TODO réparer dernière musique parfois non lancée
-				System.out.println("numéro = " + morceauJoue);
-
-				if (VariableUtile.modeMelange) {
-					playerVideoMelange.setVolume(1);
-
-					final DoubleProperty width = mediaViewMelange.fitWidthProperty();
-					final DoubleProperty height = mediaViewMelange.fitHeightProperty();
-
-					width.bind(Bindings.selectDouble(mediaViewMelange.sceneProperty(), "width"));
-					height.bind(Bindings.selectDouble(mediaViewMelange.sceneProperty(), "height"));
-
-					int debut = 35 * (morceauJoue - 1);
-					System.out.println("début : " + debut);
-					try {
-						playerVideoMelange.setStartTime(Duration.seconds(debut));
-					} catch (Exception e) {
-						debut = 35;
-						playerVideoMelange.setStartTime(Duration.seconds(debut));
-					}
-					if (morceauJoue < 6) {
-						int fin = debut + 35;
-						System.out.println("fin : " + fin);
-						try {
-							playerVideoMelange.setStopTime(Duration.seconds(fin));
-							System.out.println("STOP");
-						} catch (Exception e) {
-							// Aller jusqu'à la fin
-							System.out.println("jusqu'à la fin");
-						}
-					}
-
-					mediaViewMelange.setVisible(true);
-					Platform.runLater(() -> {
-						playerVideoMelange.play();
-					});
-
-					playerVideoMelange.setOnEndOfMedia(() -> {
-						VariableUtile.playerVideosMelange.remove(playerVideoMelange);
-						mediaViewMelange.setVisible(false);
-						Platform.runLater(() -> {
-							VariableUtile.root.getChildren().remove(mediaViewMelange);
-						});
-						VariableUtile.mediaViewsMelange.remove(mediaViewMelange);
-						if (morceauJoue == 6) {
-							System.out.println("fin morceau 6");
-							VariableUtile.modeMelange = false;
-							VariableUtile.stoperMelange();
-							VariableUtile.genererBoutonSuggestion(true);
-							VariableUtile.scene.setCursor(Cursor.DEFAULT);
-							VariableUtile.cacherBarreAction();
-							VariableUtile.afficherMenuPrincipal();
-							VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
-							VariableUtile.primaryStage.setFullScreen(false);
-						}
-					});
-				}
+	/** Exécuté sur le thread JavaFX à l'heure prévue de chaque morceau. */
+	private static void lancerMorceauDeMelange(MediaPlayer player, MediaView vue, int morceauJoue) {
+		if (!modeMelange) {
+			return;
+		}
+		player.setVolume(1);
+		int debut = 35 * (morceauJoue - 1);
+		try {
+			player.setStartTime(Duration.seconds(debut));
+		} catch (Exception e) {
+			player.setStartTime(Duration.seconds(35));
+		}
+		if (morceauJoue < 6) {
+			try {
+				player.setStopTime(Duration.seconds(debut + 35));
+			} catch (Exception e) {
+				// aller jusqu'à la fin
 			}
-		}, 35000 * (morceauJoue - 1));
+		}
+		vue.setVisible(true);
+		vue.toFront();
+		player.play();
+
+		player.setOnEndOfMedia(() -> {
+			vue.setVisible(false);
+			root.getChildren().remove(vue);
+			if (morceauJoue == 6 || playerVideosMelange.indexOf(player) == playerVideosMelange.size() - 1) {
+				finMelange();
+			}
+		});
+	}
+
+	private static void finMelange() {
+		modeMelange = false;
+		stoperMelange();
+		genererBoutonSuggestion(true);
+		scene.setCursor(Cursor.DEFAULT);
+		cacherBarreAction();
+		afficherMenuPrincipal();
+		videoEnCours = false;
+		lecteurVLCJ.estEnPleinEcran = false;
+		primaryStage.setFullScreen(false);
 	}
 
 	public static void rembobinerVideo(int nbSecondes) {
-		long tempsActuel = VariableUtile.lecteurVLCJ.tempsActuelMillis();
+		long tempsActuel = lecteurVLCJ.tempsActuelMillis();
 		long nouveauTemps = tempsActuel - (nbSecondes * 1000L);
-
 		if (nouveauTemps < 0) {
 			nouveauTemps = 0;
 		}
-
-		VariableUtile.lecteurVLCJ.lancerAuTemps(nouveauTemps);
+		lecteurVLCJ.lancerAuTemps(nouveauTemps);
 	}
 
+	/** Arrête le mélange et LIBÈRE les lecteurs (sans dispose(), chaque lecteur JavaFX garde ses ressources natives). */
 	public static void stoperMelange() {
-		for (MediaPlayer playerVideoMelange : VariableUtile.playerVideosMelange) {
-			playerVideoMelange.stop();
+		if (timelineMelange != null) {
+			timelineMelange.stop();
+			timelineMelange = null;
 		}
-		VariableUtile.playerVideosMelange.clear();
-		for (MediaView mediaViewMelange : VariableUtile.mediaViewsMelange) {
-			mediaViewMelange.setVisible(false);
-			Platform.runLater(() -> {
-				VariableUtile.root.getChildren().remove(mediaViewMelange);
-			});
+		for (MediaPlayer player : new ArrayList<>(playerVideosMelange)) {
+			try {
+				player.setOnEndOfMedia(null);
+				player.stop();
+				player.dispose();
+			} catch (Exception e) {
+				Diagnostic.log("Arrêt d'un lecteur du mélange", e);
+			}
 		}
-		VariableUtile.mediaViewsMelange.clear();
+		playerVideosMelange.clear();
+		for (MediaView vue : mediaViewsMelange) {
+			vue.setVisible(false);
+			vue.setMediaPlayer(null);
+			root.getChildren().remove(vue);
+		}
+		mediaViewsMelange.clear();
 	}
+
+	// ------------------------------------------------------------------ sélection
 
 	public static void finSelection() {
-		VariableUtile.lecteurVLCJ.imageView.setVisible(false);
-		VariableUtile.root.getChildren().remove(VariableUtile.lecteurVLCJ.imageView);
+		lecteurVLCJ.arreter();
+		lecteurVLCJ.imageView.setVisible(false);
+		root.getChildren().remove(lecteurVLCJ.imageView);
 		quitterPleinEcran();
 		modeSelection = false;
 		genererBoutonSuggestion(true);
@@ -416,14 +458,14 @@ public class VariableUtile {
 		cacherBarreAction();
 		afficherMenuPrincipal();
 
-		VariableUtile.videoEnCours = false;
+		videoEnCours = false;
 
-		VariableUtile.lecteurVLCJ.estEnPleinEcran = false;
+		lecteurVLCJ.estEnPleinEcran = false;
 		primaryStage.setFullScreen(false);
 	}
 
 	public static void ouvrirEcranSelection() {
-		VariableUtile.modeSelection = true;
+		modeSelection = true;
 		cacherMenuPrincipal();
 		afficherEcranSelection();
 
@@ -439,79 +481,106 @@ public class VariableUtile {
 				musiquesDejaChoisiees.add(aleaVideo);
 				dansesSelectionnees.add(dansesFiltrees.get(aleaVideo));
 			} else {
-				dansesSelectionnees.add(VariableUtile.danseNeant);
+				dansesSelectionnees.add(danseNeant);
 			}
 		}
 
 		MainDanse.genererBoutonsDanse(true, true, true);
 	}
 
+	/** Remplace la danse d'un emplacement de la sélection par une autre, au hasard. */
+	public static void remplacerDanseSelection(int emplacement) {
+		int nombreDansesSelectionnables = 0;
+		for (Danse d : dansesSelectionnees) {
+			if (!d.equals(danseNeant) && dansesFiltrees.contains(d)) {
+				nombreDansesSelectionnables++;
+			}
+		}
+		if (nombreDansesSelectionnables < dansesFiltrees.size()) {
+			int aleaVideo;
+			do {
+				aleaVideo = (int) Math.ceil(Math.random() * (dansesFiltrees.size())) - 1;
+			} while (dansesSelectionnees.contains(dansesFiltrees.get(aleaVideo)));
+			dansesSelectionnees.set(emplacement, dansesFiltrees.get(aleaVideo));
+		} else {
+			dansesSelectionnees.set(emplacement, danseNeant);
+		}
+		MainDanse.genererBoutonsDanse(true, true, true);
+	}
+
+	// ------------------------------------------------------------------ affichage
+
 	public static void cacherMenuPrincipal() {
-		for (Bouton bouton : VariableUtile.boutonsDanse) {
+		for (Bouton bouton : boutonsDanse) {
 			bouton.setVisible(false);
 			if (bouton.changerDanseBouton != null) {
 				bouton.changerDanseBouton.setVisible(false);
 			}
 		}
-		for (Bouton boutonMenu : VariableUtile.boutonsMenu) {
-			boutonMenu.setVisible(false);
+		for (Bouton boutonMenu : boutonsMenu) {
+			if (boutonMenu != null) {
+				boutonMenu.setVisible(false);
+			}
 		}
-		for (Text unText : VariableUtile.textes) {
+		for (Text unText : textes) {
 			unText.setVisible(false);
 		}
-		VariableUtile.barreRecherche.setVisible(false);
+		barreRecherche.setVisible(false);
 	}
 
 	public static void cacherBarreAction() {
-		for (Bouton boutonAction : VariableUtile.boutonsAction) {
+		for (Bouton boutonAction : boutonsAction) {
 			boutonAction.setVisible(false);
 		}
 	}
 
 	public static void cacherMenuFiltres() {
-		for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+		for (Bouton boutonFiltre : boutonsFiltres) {
 			boutonFiltre.setVisible(false);
 		}
-		for (Bouton boutonFiltreAnnexe : VariableUtile.boutonsFiltresAnnexes) {
+		for (Bouton boutonFiltreAnnexe : boutonsFiltresAnnexes) {
 			boutonFiltreAnnexe.setVisible(false);
 		}
-		for (Text texteFiltre : VariableUtile.textesFiltres) {
+		for (Text texteFiltre : textesFiltres) {
 			texteFiltre.setVisible(false);
 		}
 	}
 
 	public static void cacherMenuTri() {
-		for (Bouton boutonTri : VariableUtile.boutonsTri) {
+		for (Bouton boutonTri : boutonsTri) {
 			boutonTri.setVisible(false);
 		}
-		for (Bouton boutonTriAnnexe : VariableUtile.boutonsTriAnnexes) {
+		for (Bouton boutonTriAnnexe : boutonsTriAnnexes) {
 			boutonTriAnnexe.setVisible(false);
 		}
 	}
 
 	public static void cacherEcranSelection() {
-		for (Bouton boutonSelection : VariableUtile.boutonsSelection) {
+		for (Bouton boutonSelection : boutonsSelection) {
 			boutonSelection.setVisible(false);
 		}
-		VariableUtile.barreRecherche.setVisible(false);
+		barreRecherche.setVisible(false);
 	}
 
 	public static void afficherMenuPrincipal() {
-		for (Bouton bouton : VariableUtile.boutonsDanse) {
+		Theme.afficherFond(true);
+		for (Bouton bouton : boutonsDanse) {
 			bouton.setVisible(true);
 		}
-		for (Bouton boutonMenu : VariableUtile.boutonsMenu) {
-			boutonMenu.setVisible(true);
+		for (Bouton boutonMenu : boutonsMenu) {
+			if (boutonMenu != null) {
+				boutonMenu.setVisible(true);
+			}
 		}
-		for (Text unText : VariableUtile.textes) {
+		for (Text unText : textes) {
 			unText.setVisible(true);
 		}
-		VariableUtile.barreRecherche.setVisible(true);
+		barreRecherche.setVisible(true);
 	}
 
 	public static void afficherBarreAction() {
-		for (Bouton boutonAction : VariableUtile.boutonsAction) {
-			if (VariableUtile.modeIllimite || !boutonAction.text.getText().equals("Passer")) {
+		for (Bouton boutonAction : boutonsAction) {
+			if (modeIllimite || !boutonAction.text.getText().equals("Passer")) {
 				boutonAction.setVisible(true);
 				boutonAction.toFront();
 			}
@@ -519,64 +588,68 @@ public class VariableUtile {
 	}
 
 	public static void afficherMenuFiltres() {
-		VariableUtile.modeFiltre = true;
-		for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
+		Theme.afficherFond(true);
+		modeFiltre = true;
+		for (Bouton boutonFiltre : boutonsFiltres) {
 			boutonFiltre.setVisible(true);
 		}
-		for (Bouton boutonFiltreAnnexe : VariableUtile.boutonsFiltresAnnexes) {
+		for (Bouton boutonFiltreAnnexe : boutonsFiltresAnnexes) {
 			boutonFiltreAnnexe.setVisible(true);
 		}
-		for (Text texteFiltre : VariableUtile.textesFiltres) {
+		for (Text texteFiltre : textesFiltres) {
 			texteFiltre.setVisible(true);
 		}
-		VariableUtile.barreRecherche.setVisible(true);
+		barreRecherche.setVisible(true);
 	}
 
 	public static void afficherMenuTri() {
-		VariableUtile.modeTri = true;
-		for (Bouton boutonTri : VariableUtile.boutonsTri) {
+		Theme.afficherFond(true);
+		modeTri = true;
+		for (Bouton boutonTri : boutonsTri) {
 			boutonTri.setVisible(true);
 		}
-		for (Bouton boutonTriAnnexe : VariableUtile.boutonsTriAnnexes) {
+		for (Bouton boutonTriAnnexe : boutonsTriAnnexes) {
 			boutonTriAnnexe.setVisible(true);
 		}
-		VariableUtile.barreRecherche.setVisible(true);
+		barreRecherche.setVisible(true);
 	}
 
 	public static void afficherEcranSelection() {
-		for (Bouton boutonSelection : VariableUtile.boutonsSelection) {
+		Theme.afficherFond(true);
+		for (Bouton boutonSelection : boutonsSelection) {
 			boutonSelection.setVisible(true);
 		}
 		boutonFiltrer.setVisible(true);
-		VariableUtile.barreRecherche.setVisible(true);
+		barreRecherche.setVisible(true);
 	}
 
 	public static void reafficherEcranSelection() {
-		VariableUtile.afficherEcranSelection();
-		for (Bouton boutonDanse : VariableUtile.boutonsDanse) {
+		afficherEcranSelection();
+		for (Bouton boutonDanse : boutonsDanse) {
 			boutonDanse.setVisible(true);
-			boutonDanse.changerDanseBouton.setVisible(true);
+			if (boutonDanse.changerDanseBouton != null) {
+				boutonDanse.changerDanseBouton.setVisible(true);
+			}
 		}
 	}
 
 	public static void quitterDanse() {
-		if (!VariableUtile.modeMelange) {
-			VariableUtile.lecteurVLCJ.arreter();
-			VariableUtile.lecteurVLCJ.imageView.setVisible(false);
-//			VariableUtile.mediaView.setVisible(false);
-//			Platform.runLater(() -> {
-//				VariableUtile.root.getChildren().remove(VariableUtile.mediaView);
-//			});
+		MainDanse.annulerDecompte();
+		if (!modeMelange) {
+			lecteurVLCJ.arreter();
+			lecteurVLCJ.imageView.setVisible(false);
 		} else {
-			VariableUtile.modeMelange = false;
-			VariableUtile.stoperMelange();
+			modeMelange = false;
+			stoperMelange();
 		}
-		if (!VariableUtile.modeSelection) {
-			VariableUtile.genererBoutonSuggestion(true);
-			VariableUtile.modeIllimite = false;
-			VariableUtile.modeSelection = false;
-			VariableUtile.cacherBarreAction();
-			VariableUtile.afficherMenuPrincipal();
+		videoEnCours = false;
+		scene.setCursor(Cursor.DEFAULT);
+		if (!modeSelection) {
+			genererBoutonSuggestion(true);
+			modeIllimite = false;
+			modeSelection = false;
+			cacherBarreAction();
+			afficherMenuPrincipal();
 		} else {
 			finSelection();
 		}
