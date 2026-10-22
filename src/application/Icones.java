@@ -131,13 +131,15 @@ public final class Icones {
 	}
 
 	/** Changer la luminosité d'une icône (survol / état inactif). */
-	public static void regler(Node icone, double opacite, boolean lumineux) {
+	public static void regler(Node icone, double opacite, boolean lumineux, Color lueur) {
 		if (icone == null) {
 			return;
 		}
 		icone.setOpacity(opacite);
 		if (icone.getEffect() instanceof DropShadow) {
-			((DropShadow) icone.getEffect()).setRadius(lumineux ? 24 : 12);
+			DropShadow ds = (DropShadow) icone.getEffect();
+			ds.setRadius(lumineux ? 24 : 12);
+			ds.setColor(Color.color(lueur.getRed(), lueur.getGreen(), lueur.getBlue(), 0.75));
 		}
 	}
 

@@ -26,6 +26,8 @@ public class BarreRecherche extends Parent {
 	Text text;
 	Text indice;
 	private final Line curseur;
+	private final Circle verre;
+	private final Line manche;
 	private final Text effacer;
 	private final double largeurTexte;
 	private final double departTexte;
@@ -53,11 +55,11 @@ public class BarreRecherche extends Parent {
 		double rayon = hauteur * 0.17;
 		double cx = positionLargeur + hauteur * 0.62;
 		double cy = centreY - hauteur * 0.05;
-		Circle verre = new Circle(cx, cy, rayon);
+		verre = new Circle(cx, cy, rayon);
 		verre.setFill(null);
 		verre.setStroke(Theme.CYAN);
 		verre.setStrokeWidth(hauteur * 0.07);
-		Line manche = new Line(cx + rayon * 0.72, cy + rayon * 0.72, cx + rayon * 1.65, cy + rayon * 1.65);
+		manche = new Line(cx + rayon * 0.72, cy + rayon * 0.72, cx + rayon * 1.65, cy + rayon * 1.65);
 		manche.setStroke(Theme.CYAN);
 		manche.setStrokeWidth(hauteur * 0.09);
 		manche.setStrokeLineCap(StrokeLineCap.ROUND);
@@ -135,7 +137,30 @@ public class BarreRecherche extends Parent {
 			curseur.setEndX(departTexte + Math.min(l, largeurTexte - 4));
 		});
 
+		// la barre suit la couleur de la dernière danse survolée
+		suiviAmbiance = (o, a, n) -> teinter(n);
+		Theme.ambianceProperty().addListener(new javafx.beans.value.WeakChangeListener<>(suiviAmbiance));
+		teinter(Theme.ambianceProperty().get());
+
 		Theme.fx(() -> VariableUtile.root.getChildren().add(this));
+	}
+
+	private javafx.beans.value.ChangeListener<Color> suiviAmbiance;
+	private Color accentCourant = Theme.CYAN;
+
+	private void teinter(Color ambiance) {
+		Color vive = Color.hsb(ambiance.getHue(), Math.max(0.55, ambiance.getSaturation()), 1.0);
+		accentCourant = vive;
+		double h = ambiance.getHue();
+		rectangle.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+				new Stop(0, Color.hsb(h, 0.80, 0.30, 0.94)), new Stop(1, Color.hsb(h, 0.85, 0.13, 0.94))));
+		rectangle.setStroke(new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, new Stop(0, vive),
+				new Stop(1, vive.deriveColor(40, 1, 0.9, 1))));
+		rectangle.setEffect(Theme.lueur(vive, 0.6, 18));
+		verre.setStroke(vive);
+		manche.setStroke(vive);
+		curseur.setStroke(vive);
+		indice.setFill(vive.interpolate(Color.web("#8da3d6"), 0.6));
 	}
 
 	/** Conservé pour compatibilité : la barre garde la même couleur quelle que soit la danse. */

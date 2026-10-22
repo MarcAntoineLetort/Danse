@@ -61,6 +61,7 @@ public final class Theme {
 
 	private static Group fond;
 	private static Rectangle halo;
+	private static Rectangle baseFond;
 	private static final ObjectProperty<Color> ambiance = new SimpleObjectProperty<>(Color.web("#2f6bff"));
 	private static Timeline animationAmbiance;
 
@@ -128,13 +129,15 @@ public final class Theme {
 				new Stop(1, Color.hsb(h, 0.80, 0.10, 0.96)));
 	}
 
-	public static Paint degradeBouton(boolean actif) {
+	/** Dégradé des boutons de menu, teinté par la couleur d'ambiance. */
+	public static Paint degradeBouton(boolean actif, Color accent) {
+		double h = accent.getHue();
 		if (actif) {
-			return new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, new Stop(0, Color.web("#1d4fb3", 0.92)),
-					new Stop(1, Color.web("#0d2a63", 0.92)));
+			return new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, new Stop(0, Color.hsb(h, 0.75, 0.50, 0.94)),
+					new Stop(1, Color.hsb(h, 0.85, 0.22, 0.94)));
 		}
-		return new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, new Stop(0, Color.web("#14275a", 0.88)),
-				new Stop(1, Color.web("#0a1536", 0.88)));
+		return new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, new Stop(0, Color.hsb(h, 0.60, 0.26, 0.90)),
+				new Stop(1, Color.hsb(h, 0.70, 0.12, 0.90)));
 	}
 
 	// ------------------------------------------------------------------ fond
@@ -153,8 +156,8 @@ public final class Theme {
 		fond.setMouseTransparent(true);
 
 		Rectangle base = new Rectangle(L, H);
-		base.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE, new Stop(0, Color.web("#050a26")),
-				new Stop(0.55, Color.web("#0a1f5c")), new Stop(1, Color.web("#190c4a"))));
+		baseFond = base;
+		majBase(ambiance.get());
 		fond.getChildren().add(base);
 
 		Image perso = null;
@@ -198,7 +201,10 @@ public final class Theme {
 		halo = new Rectangle(L, H);
 		halo.setBlendMode(javafx.scene.effect.BlendMode.SCREEN);
 		majHalo(ambiance.get());
-		ambiance.addListener((o, a, n) -> majHalo(n));
+		ambiance.addListener((o, a, n) -> {
+			majBase(n);
+			majHalo(n);
+		});
 		fond.getChildren().add(halo);
 
 		fond.setCache(true);
@@ -206,10 +212,27 @@ public final class Theme {
 		root.getChildren().add(0, fond);
 	}
 
+	/** Le dégradé de fond prend la teinte de la danse survolée. */
+	private static void majBase(Color c) {
+		if (baseFond == null) {
+			return;
+		}
+		double h = c.getHue();
+		baseFond.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+				new Stop(0, Color.hsb(h, 0.90, 0.16)), new Stop(0.5, Color.hsb(h, 0.85, 0.42)),
+				new Stop(1, Color.hsb((h + 40) % 360, 0.85, 0.24))));
+	}
+
 	private static void majHalo(Color c) {
-		halo.setFill(new RadialGradient(0, 0, 0.5, 0.55, 0.75, true, CycleMethod.NO_CYCLE,
-				new Stop(0, Color.color(c.getRed(), c.getGreen(), c.getBlue(), 0.30)),
+		halo.setFill(new RadialGradient(0, 0, 0.5, 0.5, 0.85, true, CycleMethod.NO_CYCLE,
+				new Stop(0, Color.color(c.getRed(), c.getGreen(), c.getBlue(), 0.60)),
+				new Stop(0.6, Color.color(c.getRed(), c.getGreen(), c.getBlue(), 0.22)),
 				new Stop(1, Color.color(c.getRed(), c.getGreen(), c.getBlue(), 0))));
+	}
+
+	/** Couleur d'accent de la dernière danse survolée (suivie par les boutons). */
+	public static ObjectProperty<Color> ambianceProperty() {
+		return ambiance;
 	}
 
 	/** Transition douce de la couleur d'ambiance (survol d'une danse). */
@@ -218,7 +241,7 @@ public final class Theme {
 			if (animationAmbiance != null) {
 				animationAmbiance.stop();
 			}
-			animationAmbiance = new Timeline(new KeyFrame(Duration.millis(450),
+			animationAmbiance = new Timeline(new KeyFrame(Duration.millis(350),
 					new KeyValue(ambiance, accent, Interpolator.EASE_BOTH)));
 			animationAmbiance.play();
 		});

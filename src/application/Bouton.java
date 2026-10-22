@@ -70,6 +70,7 @@ public class Bouton extends Parent {
 	private Timeline animationSurvol;
 	private double strokeNormal;
 	private double hautBande;
+	private javafx.beans.value.ChangeListener<Color> suiviAmbiance; // référence forte (l'écouteur est faible)
 
 	// ====================================================================================
 	// Bouton danse et suggestion
@@ -231,7 +232,7 @@ public class Bouton extends Parent {
 					VariableUtile.couleur1 = danse.couleur1;
 					VariableUtile.couleur2 = danse.couleur2;
 					VariableUtile.danseSelectionnee = danse;
-					Theme.changerAmbiance(accent);
+					Theme.changerAmbiance(Theme.accentDe(danse));
 					VariableUtile.genererTextPage();
 					VariableUtile.apercuMusique(danse);
 				}
@@ -470,6 +471,9 @@ public class Bouton extends Parent {
 		}
 		this.getChildren().addAll(visuel, cadre);
 		appliquerStyle();
+		// Le bouton suit la couleur de la dernière danse survolée
+		suiviAmbiance = (o, a, n) -> appliquerStyle();
+		Theme.ambianceProperty().addListener(new javafx.beans.value.WeakChangeListener<>(suiviAmbiance));
 
 		this.cadre.setOnMouseEntered(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent me) {
@@ -519,41 +523,44 @@ public class Bouton extends Parent {
 		Theme.fx(animationSurvol::play);
 	}
 
-	/** Applique l'apparence selon l'état : normal / survolé / activé / désactivé. */
+	/** Applique l'apparence selon l'état (normal / survolé / activé / désactivé) et la couleur d'ambiance. */
 	private void appliquerStyle() {
 		if (carteDanse) {
 			return;
 		}
+		Color ambiance = Theme.ambianceProperty().get();
+		// couleur vive dérivée de la danse survolée
+		Color vive = Color.hsb(ambiance.getHue(), Math.max(0.55, ambiance.getSaturation()), 1.0);
 		if (sansPlaque) {
 			rectangle.setFill(Color.TRANSPARENT);
 			rectangle.setStroke(null);
-			Icones.regler(iconeVectorielle, survol ? 1 : 0.8, survol);
+			Icones.regler(iconeVectorielle, survol ? 1 : 0.8, survol, vive);
 			return;
 		}
 		boolean actif = !bascule || etatValide;
-		Paint remplissage = Theme.degradeBouton(actif && (survol || bascule));
+		Paint remplissage = Theme.degradeBouton(actif && (survol || bascule), ambiance);
 		Color bordure;
 		double lueur;
 		if (!actif) {
-			bordure = Color.web("#33466f");
+			bordure = Color.hsb(ambiance.getHue(), 0.35, 0.45);
 			lueur = 0;
 		} else if (survol) {
-			bordure = Color.web("#7ff0ff");
-			lueur = 0.95;
+			bordure = vive.interpolate(Color.WHITE, 0.55);
+			lueur = 1.0;
 		} else if (bascule) {
-			bordure = Theme.CYAN;
-			lueur = 0.65;
+			bordure = vive;
+			lueur = 0.75;
 		} else {
-			bordure = Color.web("#2f7bff");
-			lueur = 0.45;
+			bordure = vive.deriveColor(0, 0.9, 0.95, 1);
+			lueur = 0.6;
 		}
 		rectangle.setFill(remplissage);
 		rectangle.setStroke(bordure);
 		rectangle.setStrokeWidth(survol ? strokeNormal * 1.4 : strokeNormal);
-		rectangle.setEffect(lueur > 0 ? Theme.lueur(bordure, lueur, survol ? 26 : 16) : null);
+		rectangle.setEffect(lueur > 0 ? Theme.lueur(bordure, lueur, survol ? 28 : 18) : null);
 		text.setFill(actif ? Color.WHITE : Theme.TEXTE_ATTENUE);
 		double opacite = actif ? 1 : 0.45;
-		Icones.regler(iconeVectorielle, opacite, survol);
+		Icones.regler(iconeVectorielle, opacite, survol, vive);
 		imageViewBouton.setOpacity(opacite);
 	}
 
