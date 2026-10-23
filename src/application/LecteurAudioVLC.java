@@ -30,7 +30,7 @@ public class LecteurAudioVLC {
 	private volatile boolean enLecture = false;
 
 	public LecteurAudioVLC() {
-		String[] vlcArgs = { "--intf", "dummy", "--no-video", "--quiet", "--no-xlib" };
+		String[] vlcArgs = { "--intf", "dummy", "--no-video", "--quiet", "--no-xlib", "--no-video-title-show", "--no-osd" };
 		factory = new MediaPlayerFactory(vlcArgs);
 		audioPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
 

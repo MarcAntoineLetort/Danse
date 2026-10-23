@@ -37,7 +37,9 @@ public class LecteurVLCJ {
 	public boolean estEnPleinEcran = false;
 
 	public LecteurVLCJ() {
-		this.factory = new MediaPlayerFactory();
+		// --quiet / --no-video-title-show / --no-video-on-top : moins de messages VLC en console
+		// (dont « Failed to set on top », inoffensif avec une surface vidéo JavaFX)
+		this.factory = new MediaPlayerFactory("--quiet", "--no-video-title-show", "--no-video-on-top", "--no-osd");
 		this.mediaPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
 		this.imageView = new ImageView();
 		imageView.setSmooth(true);
@@ -131,6 +133,21 @@ public class LecteurVLCJ {
 		} else {
 			executer(() -> mediaPlayer.controls().play());
 		}
+	}
+
+	/** Lance la vidéo à partir d'un point donné (utilisé par le mélange). Ne bloque pas. */
+	public void demarrerA(File fichierVideo, int departSecondes) {
+		if (VariableUtile.lecteurAudio != null) {
+			VariableUtile.lecteurAudio.arreter();
+		}
+		executer(() -> {
+			VariableUtile.volumeRecommande = AnalyseurVolume.ajusterVolume(fichierVideo);
+			if (departSecondes > 0) {
+				mediaPlayer.media().play(fichierVideo.getAbsolutePath(), ":start-time=" + departSecondes);
+			} else {
+				mediaPlayer.media().play(fichierVideo.getAbsolutePath());
+			}
+		});
 	}
 
 	public void arreter() {

@@ -37,7 +37,7 @@ public class BarreRecherche extends Parent {
 			String nomImageBarre) {
 		super();
 		double centreY = positionHauteur + hauteur / 2;
-		double echelle = Theme.echelleTexte();
+		//double echelle = Theme.echelleTexte();
 
 		this.rectangle = new Rectangle(largeur, hauteur);
 		rectangle.setX(positionLargeur);
@@ -146,11 +146,11 @@ public class BarreRecherche extends Parent {
 	}
 
 	private javafx.beans.value.ChangeListener<Color> suiviAmbiance;
-	private Color accentCourant = Theme.CYAN;
+	//private Color accentCourant = Theme.CYAN;
 
 	private void teinter(Color ambiance) {
 		Color vive = Color.hsb(ambiance.getHue(), Math.max(0.55, ambiance.getSaturation()), 1.0);
-		accentCourant = vive;
+		//accentCourant = vive;
 		double h = ambiance.getHue();
 		rectangle.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
 				new Stop(0, Color.hsb(h, 0.80, 0.30, 0.94)), new Stop(1, Color.hsb(h, 0.85, 0.13, 0.94))));

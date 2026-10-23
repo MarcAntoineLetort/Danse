@@ -1,11 +1,11 @@
 package application;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
@@ -14,9 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.robot.Robot;
@@ -79,6 +76,7 @@ public class VariableUtile {
 	public static Text textFiltreTechnique;
 	public static Text texteFiltreGenre;
 	public static Text texteFiltreNbDanseurs;
+	public static Text texteFiltreVersion;
 	public static Bouton boutonFiltreIntensiteFaible;
 	public static Bouton boutonFiltreIntensiteModeree;
 	public static Bouton boutonFiltreIntensiteIntense;
@@ -116,9 +114,16 @@ public class VariableUtile {
 	public static int volumeRecommande = 100;
 	public static ImageView imageViewDanseEchangeSelection;
 	public static Bouton boutonGlissePourEchangeSelection;
-	public static ArrayList<MediaView> mediaViewsMelange = new ArrayList<>();
-	public static ArrayList<MediaPlayer> playerVideosMelange = new ArrayList<>();
-	public static Timeline timelineMelange;
+	private static ArrayList<Danse> dansesMelange = new ArrayList<>();
+	private static int segmentMelange = -1;
+	private static PauseTransition minuterieSegment;
+	private static long debutSegmentMs;
+	private static boolean segmentRelance;
+	private static final int DUREE_SEGMENT_S = 35;
+
+	/** Filtre « version » : null = toutes les versions. */
+	public static Version versionFiltre = null;
+	public static ListeDeroulante<Version> listeVersions;
 	private static Timeline veille;
 	private static Robot robot;
 	private static int sensVeille = 1;
@@ -255,6 +260,10 @@ public class VariableUtile {
 
 	private static void actionVideoTerminee() {
 		mouvSourisVsVeuille();
+		if (modeMelange) {
+			melangeVideoTerminee();
+			return;
+		}
 		if (modeSelection) {
 			numeroProchaineDanseSelection++;
 			if (dansesSelectionnees.size() > numeroProchaineDanseSelection) {
@@ -313,6 +322,12 @@ public class VariableUtile {
 
 	// ------------------------------------------------------------------ mélange
 
+	/**
+	 * Mélange : 6 danses au hasard, 35 s de chacune, enchaînées avec LE MÊME lecteur
+	 * VLC que la lecture normale. (Avant, 6 lecteurs JavaFX Media étaient créés en même
+	 * temps : leur décodeur vidéo se bloquait — image figée, son qui continue — et ils
+	 * se disputaient les ressources, ce qui coupait parfois le son.)
+	 */
 	public static void lancerMelange() {
 		if (dansesFiltrees.isEmpty()) {
 			MainDanse.afficherErreur("Aucune danse ne correspond aux filtres.");
@@ -320,88 +335,126 @@ public class VariableUtile {
 		}
 		MainDanse.annulerDecompte();
 		stoperMelange();
-		// Arrêt de la musique
 		if (lecteurAudio != null) {
 			lecteurAudio.arreter();
+		}
+
+		// Choix des danses (celles dont la vidéo existe)
+		ArrayList<Integer> dejaChoisies = new ArrayList<Integer>();
+		for (int i = 1; i < 7; i++) {
+			int aleaVideo;
+			int essais = 0;
+			do {
+				aleaVideo = (int) Math.ceil(Math.random() * dansesFiltrees.size());
+				essais++;
+			} while (dejaChoisies.contains(aleaVideo) && dansesFiltrees.size() >= i && essais < 200);
+			dejaChoisies.add(aleaVideo);
+			Danse danse = dansesFiltrees.get(aleaVideo - 1);
+			if (fichierVideo(danse).exists()) {
+				dansesMelange.add(danse);
+			} else {
+				Diagnostic.log("Mélange : vidéo introuvable " + fichierVideo(danse));
+			}
+		}
+		if (dansesMelange.isEmpty()) {
+			MainDanse.afficherErreur("Mélange impossible : aucune vidéo trouvée.");
+			return;
 		}
 		modeMelange = true;
 
 		cacherMenuPrincipal();
-		afficherBarreAction();
 		Theme.afficherFond(false);
-
 		videoEnCours = true;
 		scene.setCursor(Cursor.NONE);
 		lecteurVLCJ.estEnPleinEcran = true;
 		primaryStage.setFullScreen(true);
 
-		ArrayList<Integer> musiquesDejaChoisiees = new ArrayList<Integer>();
-		timelineMelange = new Timeline();
-		for (int i = 1; i < 7; i++) {
-			int aleaVideo;
-			do {
-				aleaVideo = (int) Math.ceil(Math.random() * dansesFiltrees.size());
-			} while (musiquesDejaChoisiees.contains(aleaVideo) && dansesFiltrees.size() >= i);
-			musiquesDejaChoisiees.add(aleaVideo);
-
-			Danse danse = dansesFiltrees.get(aleaVideo - 1);
-			MediaPlayer playerVideoMelange;
-			try {
-				playerVideoMelange = new MediaPlayer(new Media(fichierVideo(danse).toURI().toURL().toExternalForm()));
-			} catch (Exception e) {
-				MainDanse.afficherErreur("Impossible de charger la vidéo " + danse.nomVideo);
-				continue;
-			}
-			MediaView mediaViewMelange = new MediaView(playerVideoMelange);
-			mediaViewMelange.setVisible(false);
-			mediaViewMelange.fitWidthProperty().bind(scene.widthProperty());
-			mediaViewMelange.fitHeightProperty().bind(scene.heightProperty());
-			root.getChildren().add(mediaViewMelange);
-			mediaViewsMelange.add(mediaViewMelange);
-			playerVideosMelange.add(playerVideoMelange);
-
-			final int morceauJoue = i;
-			timelineMelange.getKeyFrames().add(new KeyFrame(Duration.seconds(35.0 * (i - 1)),
-					e -> lancerMorceauDeMelange(playerVideoMelange, mediaViewMelange, morceauJoue)));
+		lecteurVLCJ.imageView.fitWidthProperty().bind(scene.widthProperty());
+		lecteurVLCJ.imageView.fitHeightProperty().bind(scene.heightProperty());
+		if (!root.getChildren().contains(lecteurVLCJ.imageView)) {
+			root.getChildren().add(lecteurVLCJ.imageView);
 		}
-		timelineMelange.play();
+		lecteurVLCJ.imageView.setVisible(true);
+		lecteurVLCJ.imageView.toFront();
+		lecteurVLCJ.setOnVideoFinished(() -> actionVideoTerminee());
+
+		// Calcul du volume des vidéos suivantes pendant que la première joue
+		final ArrayList<Danse> aAnalyser = new ArrayList<>(dansesMelange);
+		Thread analyse = new Thread(() -> {
+			for (int i = 1; i < aAnalyser.size(); i++) {
+				AnalyseurVolume.ajusterVolume(fichierVideo(aAnalyser.get(i)));
+			}
+		}, "analyse-volumes-melange");
+		analyse.setDaemon(true);
+		analyse.start();
+
+		lancerSegment(0);
 	}
 
-	/** Exécuté sur le thread JavaFX à l'heure prévue de chaque morceau. */
-	private static void lancerMorceauDeMelange(MediaPlayer player, MediaView vue, int morceauJoue) {
+	private static void lancerSegment(int i) {
 		if (!modeMelange) {
 			return;
 		}
-		player.setVolume(1);
-		int debut = 35 * (morceauJoue - 1);
-		try {
-			player.setStartTime(Duration.seconds(debut));
-		} catch (Exception e) {
-			player.setStartTime(Duration.seconds(35));
+		if (i >= dansesMelange.size()) {
+			finMelange();
+			return;
 		}
-		if (morceauJoue < 6) {
-			try {
-				player.setStopTime(Duration.seconds(debut + 35));
-			} catch (Exception e) {
-				// aller jusqu'à la fin
-			}
-		}
-		vue.setVisible(true);
-		vue.toFront();
-		player.play();
+		segmentMelange = i;
+		segmentRelance = false;
+		debutSegmentMs = System.currentTimeMillis();
+		lecteurVLCJ.demarrerA(fichierVideo(dansesMelange.get(i)), DUREE_SEGMENT_S * i);
 
-		player.setOnEndOfMedia(() -> {
-			vue.setVisible(false);
-			root.getChildren().remove(vue);
-			if (morceauJoue == 6 || playerVideosMelange.indexOf(player) == playerVideosMelange.size() - 1) {
-				finMelange();
-			}
-		});
+		if (minuterieSegment != null) {
+			minuterieSegment.stop();
+			minuterieSegment = null;
+		}
+		if (i < dansesMelange.size() - 1) {
+			// le morceau suivant démarre dans 35 s (le dernier va jusqu'à la fin de sa vidéo)
+			PauseTransition minuterie = new PauseTransition(Duration.seconds(DUREE_SEGMENT_S));
+			minuterie.setOnFinished(e -> lancerSegment(i + 1));
+			minuterieSegment = minuterie;
+			minuterie.play();
+		}
+	}
+
+	/** Appelé quand VLC signale la fin d'une vidéo pendant le mélange. */
+	static void melangeVideoTerminee() {
+		if (!modeMelange || segmentMelange < 0) {
+			return;
+		}
+		int i = segmentMelange;
+		long duree = System.currentTimeMillis() - debutSegmentMs;
+		if (duree < 3000 && i > 0 && !segmentRelance) {
+			// le point de départ dépasse la durée de la vidéo : on la joue depuis le début
+			segmentRelance = true;
+			lecteurVLCJ.demarrerA(fichierVideo(dansesMelange.get(i)), 0);
+			return;
+		}
+		if (i >= dansesMelange.size() - 1) {
+			finMelange();
+		} else {
+			// la vidéo s'est terminée avant les 35 s : on passe directement à la suivante
+			lancerSegment(i + 1);
+		}
+	}
+
+	/** Pause / reprise du mélange (la minuterie suit la lecture). */
+	public static void pauseMelange() {
+		if (modeMelange && minuterieSegment != null) {
+			minuterieSegment.pause();
+		}
+	}
+
+	public static void reprendreMelange() {
+		if (modeMelange && minuterieSegment != null) {
+			minuterieSegment.play();
+		}
 	}
 
 	private static void finMelange() {
 		modeMelange = false;
 		stoperMelange();
+		lecteurVLCJ.imageView.setVisible(false);
 		genererBoutonSuggestion(true);
 		scene.setCursor(Cursor.DEFAULT);
 		cacherBarreAction();
@@ -420,28 +473,17 @@ public class VariableUtile {
 		lecteurVLCJ.lancerAuTemps(nouveauTemps);
 	}
 
-	/** Arrête le mélange et LIBÈRE les lecteurs (sans dispose(), chaque lecteur JavaFX garde ses ressources natives). */
+	/** Arrête le mélange (minuterie et lecture). */
 	public static void stoperMelange() {
-		if (timelineMelange != null) {
-			timelineMelange.stop();
-			timelineMelange = null;
+		if (minuterieSegment != null) {
+			minuterieSegment.stop();
+			minuterieSegment = null;
 		}
-		for (MediaPlayer player : new ArrayList<>(playerVideosMelange)) {
-			try {
-				player.setOnEndOfMedia(null);
-				player.stop();
-				player.dispose();
-			} catch (Exception e) {
-				Diagnostic.log("Arrêt d'un lecteur du mélange", e);
-			}
+		segmentMelange = -1;
+		dansesMelange.clear();
+		if (lecteurVLCJ != null && modeMelange) {
+			lecteurVLCJ.arreter();
 		}
-		playerVideosMelange.clear();
-		for (MediaView vue : mediaViewsMelange) {
-			vue.setVisible(false);
-			vue.setMediaPlayer(null);
-			root.getChildren().remove(vue);
-		}
-		mediaViewsMelange.clear();
 	}
 
 	// ------------------------------------------------------------------ sélection
@@ -544,6 +586,9 @@ public class VariableUtile {
 		for (Text texteFiltre : textesFiltres) {
 			texteFiltre.setVisible(false);
 		}
+		if (listeVersions != null) {
+			listeVersions.setVisible(false);
+		}
 	}
 
 	public static void cacherMenuTri() {
@@ -599,6 +644,9 @@ public class VariableUtile {
 		for (Text texteFiltre : textesFiltres) {
 			texteFiltre.setVisible(true);
 		}
+		if (listeVersions != null) {
+			listeVersions.setVisible(true);
+		}
 		barreRecherche.setVisible(true);
 	}
 
@@ -639,8 +687,10 @@ public class VariableUtile {
 			lecteurVLCJ.arreter();
 			lecteurVLCJ.imageView.setVisible(false);
 		} else {
+			lecteurVLCJ.arreter();
 			modeMelange = false;
 			stoperMelange();
+			lecteurVLCJ.imageView.setVisible(false);
 		}
 		videoEnCours = false;
 		scene.setCursor(Cursor.DEFAULT);

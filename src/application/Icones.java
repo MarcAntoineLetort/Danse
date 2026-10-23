@@ -86,13 +86,14 @@ public final class Icones {
 			g.getChildren().add(trait(inf, 2.6, Color.web("#ffffff", 0.55)));
 			break;
 		case "Mélange":
-			g.getChildren().add(trait("M22 86 L60 40", 13, degrade("#ff6ec7", "#ff9f1a")));
-			g.getChildren().add(trait("M60 40 L68 30", 13, Color.web("#ffffff", 0.9)));
+			// baguette en diagonale ; les étincelles restent à distance du bout
+			g.getChildren().add(trait("M20 88 L56 48", 13, degrade("#ff6ec7", "#ff9f1a")));
+			g.getChildren().add(trait("M56 48 L63 40", 13, Color.web("#ffffff", 0.9)));
 			Paint etoile = degrade("#d9fbff", "#2fd8ff");
-			g.getChildren().add(forme(etoile4(76, 22, 16), etoile));
-			g.getChildren().add(forme(etoile4(34, 34, 9), etoile));
-			g.getChildren().add(forme(etoile4(86, 60, 8), degrade("#fff2b0", "#ffc13a")));
-			g.getChildren().add(forme(etoile4(46, 14, 6), etoile));
+			g.getChildren().add(forme(etoile4(82, 24, 12), etoile));
+			g.getChildren().add(forme(etoile4(46, 20, 7), etoile));
+			g.getChildren().add(forme(etoile4(86, 66, 7), degrade("#fff2b0", "#ffc13a")));
+			g.getChildren().add(forme(etoile4(24, 46, 6), degrade("#fff2b0", "#ffc13a")));
 			lueur = Color.web("#ff6ec7");
 			break;
 		case "Selection":

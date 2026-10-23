@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
@@ -260,8 +258,10 @@ public class MainDanse extends Application {
 						if (VariableUtile.lecteurVLCJ.estEnPause()) {
 							VariableUtile.rembobinerVideo(3);
 							VariableUtile.lecteurVLCJ.demarrer(null);
+							VariableUtile.reprendreMelange();
 						} else if (VariableUtile.lecteurVLCJ.estEnLecture()) {
 							VariableUtile.lecteurVLCJ.pause();
+							VariableUtile.pauseMelange();
 						}
 					}
 				} else {
@@ -492,7 +492,7 @@ public class MainDanse extends Application {
 			VariableUtile.cacherEcranSelection();
 			VariableUtile.afficherMenuTri();
 		});
-		VariableUtile.boutonTriValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
+		VariableUtile.boutonTriValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 76,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
 		VariableUtile.boutonTriValider.setLabel("Valider");
 		VariableUtile.boutonTriValider.setVisible(false);
@@ -534,8 +534,9 @@ public class MainDanse extends Application {
 		}
 	}
 
-	private Text titreFiltre(String libelle, double x, double y, double largeur) {
-		Text t = new Text(VariableUtile.px * x, VariableUtile.py * y, libelle);
+	private Text titreFiltre(String libelle, double xCentre, double y, double largeur) {
+		// xCentre : milieu du titre, pour l'aligner sur ses boutons
+		Text t = new Text(VariableUtile.px * (xCentre - largeur / 2), VariableUtile.py * y, libelle);
 		t.setFont(Theme.police(VariableUtile.py * 2.6));
 		t.setWrappingWidth(VariableUtile.px * largeur);
 		t.setTextAlignment(TextAlignment.CENTER);
@@ -548,10 +549,47 @@ public class MainDanse extends Application {
 		return t;
 	}
 
+	// Boutons de filtre : un peu plus grands qu'avant pour mieux porter leur icône
+	private static final double LF = 7.6; // largeur (% de la largeur de la fenêtre, en px)
+	private static final double HF = 8.0; // hauteur (en px)
+	private static final double Y1 = 20; // 3 rangées de boutons (% de la hauteur)
+	private static final double Y2 = 40;
+	private static final double Y3 = 60;
+	private static final double Y_TITRES = 17.6; // sous la barre de recherche (qui se termine vers 12,7)
+
 	private Bouton boutonFiltre(double x, double y, String image) {
-		return new Bouton(VariableUtile.px * x, VariableUtile.py * y, VariableUtile.px * 6.8, VariableUtile.px * 7, 25,
+		return new Bouton(VariableUtile.px * x, VariableUtile.py * y, VariableUtile.px * LF, VariableUtile.px * HF, 25,
 				image);
 	}
+
+	/** Versions réellement présentes dans la bibliothèque, dans l'ordre de l'enum. */
+	private void genererListeVersions() {
+		ArrayList<String> libelles = new ArrayList<>();
+		ArrayList<Version> valeurs = new ArrayList<>();
+		libelles.add("Toutes");
+		valeurs.add(null);
+		for (Version version : Version.values()) {
+			boolean presente = false;
+			for (Danse danse : VariableUtile.danses.values()) {
+				if (danse.version == version) {
+					presente = true;
+					break;
+				}
+			}
+			// pour proposer aussi les versions sans aucune danse, passer MASQUER_VERSIONS_VIDES à false
+			if (presente || !MASQUER_VERSIONS_VIDES) {
+				libelles.add(version.getNomComplet());
+				valeurs.add(version);
+			}
+		}
+		VariableUtile.versionFiltre = null;
+		VariableUtile.listeVersions = new ListeDeroulante<Version>(VariableUtile.px * 61, VariableUtile.py * 46,
+				VariableUtile.px * 18, VariableUtile.py * 6.2, libelles, valeurs);
+		VariableUtile.listeVersions.setVisible(false);
+		VariableUtile.listeVersions.setOnChoix(version -> VariableUtile.versionFiltre = version);
+	}
+
+	private static final boolean MASQUER_VERSIONS_VIDES = true;
 
 	private void genererBoutonsFiltre() {
 		VariableUtile.boutonFiltrer = new Bouton(VariableUtile.px * 2, VariableUtile.py * 3.2, VariableUtile.px * LB,
@@ -563,7 +601,8 @@ public class MainDanse extends Application {
 			VariableUtile.afficherMenuFiltres();
 		});
 
-		VariableUtile.boutonFiltreValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 85,
+		// Valider / Réinitialiser : remontés (ils touchaient le bas de l'écran)
+		VariableUtile.boutonFiltreValider = new Bouton(VariableUtile.px * 90, VariableUtile.py * 76,
 				VariableUtile.px * 6.8, VariableUtile.px * 7, 25, "Valider_filtre");
 		VariableUtile.boutonFiltreValider.setLabel("Valider");
 		VariableUtile.boutonFiltreValider.setVisible(false);
@@ -571,7 +610,7 @@ public class MainDanse extends Application {
 			VariableUtile.modeFiltre = false;
 			validerFiltre();
 		});
-		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 79.6, VariableUtile.py * 85,
+		VariableUtile.boutonFiltreReinitialiser = new Bouton(VariableUtile.px * 79.6, VariableUtile.py * 76,
 				VariableUtile.px * 8.8, VariableUtile.px * 7, 20, "Rejouer");
 		VariableUtile.boutonFiltreReinitialiser.setLabel("Réinitialiser");
 		VariableUtile.boutonFiltreReinitialiser.setVisible(false);
@@ -579,53 +618,62 @@ public class MainDanse extends Application {
 			for (Bouton boutonFiltre : VariableUtile.boutonsFiltres) {
 				boutonFiltre.validerBouton();
 			}
+			if (VariableUtile.listeVersions != null) {
+				VariableUtile.listeVersions.reinitialiser();
+			}
 		});
 
-		VariableUtile.textFiltreIntensite = titreFiltre("Intensité", 1, 14, 9);
-		VariableUtile.boutonFiltreIntensiteFaible = boutonFiltre(2, 17, "Intensite_faible");
+		// Les titres sont centrés au-dessus de leurs colonnes de boutons
+		double demi = LF / 2;
+		VariableUtile.textFiltreIntensite = titreFiltre("Intensité", 2 + demi, Y_TITRES, 9);
+		VariableUtile.boutonFiltreIntensiteFaible = boutonFiltre(2, Y1, "Intensite_faible");
 		VariableUtile.boutonFiltreIntensiteFaible.finirGenerationBoutonFiltre("Faible");
-		VariableUtile.boutonFiltreIntensiteModeree = boutonFiltre(2, 37, "Intensite_moderee");
+		VariableUtile.boutonFiltreIntensiteModeree = boutonFiltre(2, Y2, "Intensite_moderee");
 		VariableUtile.boutonFiltreIntensiteModeree.finirGenerationBoutonFiltre("Modérée");
-		VariableUtile.boutonFiltreIntensiteIntense = boutonFiltre(2, 57, "Intensite_intense");
+		VariableUtile.boutonFiltreIntensiteIntense = boutonFiltre(2, Y3, "Intensite_intense");
 		VariableUtile.boutonFiltreIntensiteIntense.finirGenerationBoutonFiltre("Intense");
 
-		VariableUtile.textFiltreTechnique = titreFiltre("Technique", 10, 14, 9);
-		VariableUtile.boutonFiltreTechniqueFaible = boutonFiltre(11, 17, "Technique_faible");
+		VariableUtile.textFiltreTechnique = titreFiltre("Technique", 11 + demi, Y_TITRES, 9);
+		VariableUtile.boutonFiltreTechniqueFaible = boutonFiltre(11, Y1, "Technique_faible");
 		VariableUtile.boutonFiltreTechniqueFaible.finirGenerationBoutonFiltre("Faible");
-		VariableUtile.boutonFiltreTechniqueModeree = boutonFiltre(11, 37, "Technique_moderee");
+		VariableUtile.boutonFiltreTechniqueModeree = boutonFiltre(11, Y2, "Technique_moderee");
 		VariableUtile.boutonFiltreTechniqueModeree.finirGenerationBoutonFiltre("Modérée");
-		VariableUtile.boutonFiltreTechniqueIntense = boutonFiltre(11, 57, "Technique_elevee");
+		VariableUtile.boutonFiltreTechniqueIntense = boutonFiltre(11, Y3, "Technique_elevee");
 		VariableUtile.boutonFiltreTechniqueIntense.finirGenerationBoutonFiltre("Elevée");
 
-		VariableUtile.texteFiltreGenre = titreFiltre("Genre", 35, 14, 9);
-		VariableUtile.boutonFiltreSportif = boutonFiltre(25, 17, "Sportif");
+		VariableUtile.texteFiltreGenre = titreFiltre("Genre", 36 + demi, Y_TITRES, 9);
+		VariableUtile.boutonFiltreSportif = boutonFiltre(25, Y1, "Sportif");
 		VariableUtile.boutonFiltreSportif.finirGenerationBoutonFiltre(null, Genre.Sportif);
-		VariableUtile.boutonFiltreElectro = boutonFiltre(25, 37, "Electro");
+		VariableUtile.boutonFiltreElectro = boutonFiltre(25, Y2, "Electro");
 		VariableUtile.boutonFiltreElectro.finirGenerationBoutonFiltre(null, Genre.Electro);
-		VariableUtile.boutonFiltreLatino = boutonFiltre(25, 57, "Latino");
+		VariableUtile.boutonFiltreLatino = boutonFiltre(25, Y3, "Latino");
 		VariableUtile.boutonFiltreLatino.finirGenerationBoutonFiltre(null, Genre.Latino);
-		VariableUtile.boutonFiltreFolklore = boutonFiltre(36, 17, "Folklore");
+		VariableUtile.boutonFiltreFolklore = boutonFiltre(36, Y1, "Folklore");
 		VariableUtile.boutonFiltreFolklore.finirGenerationBoutonFiltre("Folk", Genre.Folklore);
-		VariableUtile.boutonFiltreRandB = boutonFiltre(36, 37, "RandB");
+		VariableUtile.boutonFiltreRandB = boutonFiltre(36, Y2, "RandB");
 		VariableUtile.boutonFiltreRandB.finirGenerationBoutonFiltre("R&B", Genre.RandB);
-		VariableUtile.boutonFiltreRock = boutonFiltre(36, 57, "Rock");
+		VariableUtile.boutonFiltreRock = boutonFiltre(36, Y3, "Rock");
 		VariableUtile.boutonFiltreRock.finirGenerationBoutonFiltre(null, Genre.Rock);
-		VariableUtile.boutonFiltreRetro = boutonFiltre(47, 17, "Retro");
+		VariableUtile.boutonFiltreRetro = boutonFiltre(47, Y1, "Retro");
 		VariableUtile.boutonFiltreRetro.finirGenerationBoutonFiltre("Retro", Genre.Retro);
-		VariableUtile.boutonFiltrePop = boutonFiltre(47, 37, "Pop");
+		VariableUtile.boutonFiltrePop = boutonFiltre(47, Y2, "Pop");
 		VariableUtile.boutonFiltrePop.finirGenerationBoutonFiltre("Pop", Genre.Pop);
-		VariableUtile.boutonFiltreJazzy = boutonFiltre(47, 57, "Jazzy");
+		VariableUtile.boutonFiltreJazzy = boutonFiltre(47, Y3, "Jazzy");
 		VariableUtile.boutonFiltreJazzy.finirGenerationBoutonFiltre("Jazzy", Genre.Jazzy);
 
-		VariableUtile.texteFiltreNbDanseurs = titreFiltre("Nombre de danseurs", 61, 14, 32);
-		VariableUtile.boutonFiltre1Danseur = boutonFiltre(61, 17, "UnDanseur");
+		VariableUtile.texteFiltreNbDanseurs = titreFiltre("Nombre de danseurs", 61 + (88 - 61) / 2.0 + demi, Y_TITRES, 32);
+		VariableUtile.boutonFiltre1Danseur = boutonFiltre(61, Y1, "UnDanseur");
 		VariableUtile.boutonFiltre1Danseur.finirGenerationBoutonFiltre("Un", 1);
-		VariableUtile.boutonFiltre2Danseurs = boutonFiltre(70, 17, "DeuxDanseurs");
+		VariableUtile.boutonFiltre2Danseurs = boutonFiltre(70, Y1, "DeuxDanseurs");
 		VariableUtile.boutonFiltre2Danseurs.finirGenerationBoutonFiltre("Deux", 2);
-		VariableUtile.boutonFiltre3Danseurs = boutonFiltre(79, 17, "TroisDanseurs");
+		VariableUtile.boutonFiltre3Danseurs = boutonFiltre(79, Y1, "TroisDanseurs");
 		VariableUtile.boutonFiltre3Danseurs.finirGenerationBoutonFiltre("Trois", 3);
-		VariableUtile.boutonFiltre4Danseurs = boutonFiltre(88, 17, "QuatreDanseurs");
+		VariableUtile.boutonFiltre4Danseurs = boutonFiltre(88, Y1, "QuatreDanseurs");
 		VariableUtile.boutonFiltre4Danseurs.finirGenerationBoutonFiltre("Quatre +", 4);
+
+		// Filtre par version : titre + liste déroulante sous les boutons « nombre de danseurs »
+		VariableUtile.texteFiltreVersion = titreFiltre("Version", 61 + 9, 42.6, 18);
+		genererListeVersions();
 	}
 
 	public static void trierDanse(Tri modeDeTri) {
@@ -879,7 +927,8 @@ public class MainDanse extends Application {
 					&& (VariableUtile.boutonFiltreTechniqueFaible.etatValide || danse.technique != 1)
 					&& (VariableUtile.boutonFiltreTechniqueModeree.etatValide || danse.technique != 2)
 					&& (VariableUtile.boutonFiltreTechniqueIntense.etatValide || danse.technique != 3)
-					&& aAuMoinsUnGenreActive(danse) && aAuMoinsUnNbDanseursActive(danse)) {
+					&& aAuMoinsUnGenreActive(danse) && aAuMoinsUnNbDanseursActive(danse)
+					&& (VariableUtile.versionFiltre == null || danse.version == VariableUtile.versionFiltre)) {
 				VariableUtile.dansesFiltrees.add(danse);
 			}
 		}

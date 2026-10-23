@@ -416,10 +416,13 @@ public class Bouton extends Parent {
 		cadre.setOpacity(0);
 
 		// Icône : vectorielle si elle existe, sinon image PNG (comme avant)
+		boolean vectoriel = Icones.creer(texte, 10) != null;
+		// les icônes PNG (filtres, etc.) remplissent mieux leur bouton que les icônes vectorielles du menu
 		double tailleIcone = compact ? Math.min(largeur, hauteur) * 0.78
-				: Math.min(largeur * 0.60, hauteur * 0.56);
+				: (vectoriel ? Math.min(largeur * 0.60, hauteur * 0.56) : Math.min(largeur * 0.78, hauteur * 0.68));
 		double xIcone = centreX - tailleIcone / 2;
-		double yIcone = compact ? centreY - tailleIcone / 2 : positionHauteur + hauteur * 0.09;
+		double yIcone = compact ? centreY - tailleIcone / 2
+				: positionHauteur + hauteur * (vectoriel ? 0.09 : 0.05);
 		if (sansPlaque) {
 			tailleIcone = Math.min(largeur, hauteur) * 0.62;
 			xIcone = centreX - tailleIcone / 2;
@@ -451,7 +454,7 @@ public class Bouton extends Parent {
 			threadChargement.start();
 		}
 
-		this.text = new Text(positionLargeur, positionHauteur + hauteur * 0.80, texte);
+		this.text = new Text(positionLargeur, positionHauteur + hauteur * (vectoriel ? 0.80 : 0.865), texte);
 		text.setTextOrigin(VPos.CENTER);
 		text.setFont(Theme.police(taillePoliceBase));
 		adapterTaillePolice(taillePoliceBase, largeur * 0.92);
