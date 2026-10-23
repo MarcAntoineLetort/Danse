@@ -70,6 +70,10 @@ public class Bouton extends Parent {
 	private Timeline animationSurvol;
 	private double strokeNormal;
 	private double hautBande;
+	// zone (boîte) dans laquelle l'icône PNG doit être centrée
+	private double boiteCX;
+	private double boiteCY;
+	private double boiteTaille;
 	private javafx.beans.value.ChangeListener<Color> suiviAmbiance; // référence forte (l'écouteur est faible)
 
 	// ====================================================================================
@@ -348,6 +352,22 @@ public class Bouton extends Parent {
 		Theme.fx(t::play);
 	}
 
+	/**
+	 * Affiche une icône PNG exactement au centre de sa zone. Sans cela, une image qui
+	 * n'est pas carrée restait collée au coin haut-gauche de la zone (donc décalée).
+	 */
+	private void poserImage(Image img) {
+		imageViewBouton.setImage(img);
+		if (img == null || img.getWidth() <= 0 || img.getHeight() <= 0) {
+			return;
+		}
+		double echelle = Math.min(boiteTaille / img.getWidth(), boiteTaille / img.getHeight());
+		double w = img.getWidth() * echelle;
+		double h = img.getHeight() * echelle;
+		imageViewBouton.setX(boiteCX - w / 2);
+		imageViewBouton.setY(boiteCY - h / 2);
+	}
+
 	/** Remplace l'image (appelé quand le chargement asynchrone est terminé). */
 	void rafraichirImage() {
 		if (danse != null && imageViewBouton != null && danse.imageDanse1 != null) {
@@ -419,15 +439,23 @@ public class Bouton extends Parent {
 		boolean vectoriel = Icones.creer(texte, 10) != null;
 		// les icônes PNG (filtres, etc.) remplissent mieux leur bouton que les icônes vectorielles du menu
 		double tailleIcone = compact ? Math.min(largeur, hauteur) * 0.78
-				: (vectoriel ? Math.min(largeur * 0.60, hauteur * 0.56) : Math.min(largeur * 0.78, hauteur * 0.68));
+				: (vectoriel ? Math.min(largeur * 0.60, hauteur * 0.56) : Math.min(largeur * 0.78, hauteur * 0.64));
 		double xIcone = centreX - tailleIcone / 2;
-		double yIcone = compact ? centreY - tailleIcone / 2
-				: positionHauteur + hauteur * (vectoriel ? 0.09 : 0.05);
+		// centre vertical de la zone libre au-dessus du libellé
+		double centreIconeY = compact ? centreY : positionHauteur + hauteur * (vectoriel ? 0.09 : 0.00) + tailleIcone / 2;
+		if (!vectoriel && !compact) {
+			centreIconeY = positionHauteur + hauteur * 0.405;
+		}
+		double yIcone = centreIconeY - tailleIcone / 2;
 		if (sansPlaque) {
 			tailleIcone = Math.min(largeur, hauteur) * 0.62;
 			xIcone = centreX - tailleIcone / 2;
 			yIcone = centreY - tailleIcone / 2;
+			centreIconeY = centreY;
 		}
+		boiteCX = centreX;
+		boiteCY = centreIconeY;
+		boiteTaille = tailleIcone;
 		iconeVectorielle = Icones.creer(texte, tailleIcone);
 		this.imageViewBouton = new ImageView();
 		imageViewBouton.setX(xIcone);
@@ -447,15 +475,15 @@ public class Bouton extends Parent {
 				Theme.fx(() -> {
 					imageBouton1 = i1;
 					imageBouton2 = i2;
-					imageViewBouton.setImage(survol && imageBouton2 != null ? imageBouton2 : imageBouton1);
+					poserImage(survol && imageBouton2 != null ? imageBouton2 : imageBouton1);
 				});
 			}, "chargement-icone-" + texte);
 			threadChargement.setDaemon(true);
 			threadChargement.start();
 		}
 
-		this.text = new Text(positionLargeur, positionHauteur + hauteur * (vectoriel ? 0.80 : 0.865), texte);
-		text.setTextOrigin(VPos.CENTER);
+		this.text = new Text(positionLargeur, positionHauteur + hauteur * (vectoriel ? 0.865 : 0.915), texte);
+		text.setTextOrigin(VPos.BASELINE);
 		text.setFont(Theme.police(taillePoliceBase));
 		adapterTaillePolice(taillePoliceBase, largeur * 0.92);
 		text.setWrappingWidth(largeur);
@@ -509,7 +537,7 @@ public class Bouton extends Parent {
 			rectangle.setEffect(Theme.lueur(accent, s ? 0.95 : 0.55, largeurBouton * (s ? 0.12 : 0.07)));
 		} else {
 			if (imageBouton2 != null && imageBouton1 != null) {
-				imageViewBouton.setImage(s ? imageBouton2 : imageBouton1);
+				poserImage(s ? imageBouton2 : imageBouton1);
 			}
 			appliquerStyle();
 		}
